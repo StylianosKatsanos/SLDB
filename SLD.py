@@ -87,8 +87,6 @@ class TreeviewEdit(ttk.Treeview):
         
 if __name__ == "__main__":
     
-    db_ = '''C:/Users/Admin/Desktop/mytilineos/PYTHON/Inverter_Distribution_Project/Inverter_Distribution_Project.db'''
-    
     query = '''SELECT * FROM Relationships;'''
     
     a = execute_db_query(db_, query).fetchall()
