@@ -31,6 +31,22 @@ def create_dict(pl_list):
                 print(pl_dict)
     return pl_dict.items()
 
+def create_dict2(pl_dict={}, pl_list=[]):
+    #pl_dict = {}
+    for e, i in enumerate(pl_list):
+        if i[1] == "Start":
+            pl_dict[i[0]] = {}
+            print(pl_dict)
+            create_dict2(pl_dict[i[0]], pl_list.pop(e))
+            #print("Start Found")
+            print(pl_dict)
+        else:
+            if i[1] in pl_dict.keys():
+                pl_dict[i[1]][i[0]] = {} 
+                print("Key Found")
+                print(pl_dict)
+    return pl_dict.items()
+
 class TreeviewEdit(ttk.Treeview):
     def __init__(self, master, **kw):
         super().__init__(master, **kw)
@@ -87,10 +103,12 @@ class TreeviewEdit(ttk.Treeview):
         
 if __name__ == "__main__":
     
+    db_ = '''C:/Users/Admin/Documents/GitHub/Treeview-arranger/Inverter_Distribution_Project.db'''
+    
     query = '''SELECT * FROM Relationships;'''
     
     a = execute_db_query(db_, query).fetchall()
-    b = create_dict(a)
+    b = create_dict2(pl_list=a)
     
     sys.exit()
     
