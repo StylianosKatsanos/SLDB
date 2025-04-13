@@ -72,6 +72,8 @@ class TreeviewEdit(ttk.Treeview):
         print(self.selected_iid)   
         
     def option_attach(self):
+        self.transient = tk.Toplevel()
+        att_query = '''INSERT INTO Relationships (Entry_name, Attached_to) VALUES ('''
         pass
     
     def option_edit(self):
@@ -103,22 +105,22 @@ if __name__ == "__main__":
     a = execute_db_query(db_, query).fetchall()
     b = create_dict2(pl_list=a)
     
-    plant = {
-        "HV":{
-            "Plot A":{
-                "Main A1":{
-                    "Skid 1",
-                    "Skid 2",
-                    "Skid 3"
-                    },
-                "Main A2":{}
-                },
-            "Plot B":{
-                "Main B1":{}, 
-                "Main B2":{}
-                }
-            }
-        }
+#     plant = {
+#         "HV":{
+#             "Plot A":{
+#                 "Main A1":{
+#                     "Skid 1",
+#                     "Skid 2",
+#                     "Skid 3"
+#                     },
+#                 "Main A2":{}
+#                 },
+#             "Plot B":{
+#                 "Main B1":{}, 
+#                 "Main B2":{}
+#                 }
+#             }
+#         }
         
     root = tk.Tk()
     root.title('Treeview Demo - Hierarchical Data')
