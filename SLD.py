@@ -31,21 +31,14 @@ def create_dict(pl_list):
                 print(pl_dict)
     return pl_dict.items()
 
-def create_dict2(pl_dict={}, pl_list=[]):
-    #pl_dict = {}
+def create_dict2(pl_dict={}, pl_list=[], keyword="Start"):
     for e, i in enumerate(pl_list):
-        if i[1] == "Start":
+        if i[1] == keyword:
             pl_dict[i[0]] = {}
-            print(pl_dict)
-            create_dict2(pl_dict[i[0]], pl_list.pop(e))
-            #print("Start Found")
-            print(pl_dict)
+            create_dict2(pl_dict[i[0]], pl_list, i[0])
         else:
-            if i[1] in pl_dict.keys():
-                pl_dict[i[1]][i[0]] = {} 
-                print("Key Found")
-                print(pl_dict)
-    return pl_dict.items()
+            continue
+    return pl_dict
 
 class TreeviewEdit(ttk.Treeview):
     def __init__(self, master, **kw):
@@ -110,8 +103,6 @@ if __name__ == "__main__":
     a = execute_db_query(db_, query).fetchall()
     b = create_dict2(pl_list=a)
     
-    sys.exit()
-    
     plant = {
         "HV":{
             "Plot A":{
@@ -141,7 +132,7 @@ if __name__ == "__main__":
     treeview.pack(fill=tk.BOTH, expand=True)
     treeview.heading("#0", text="Plant")
     
-    for x in treeview.iterate_dict(plant):
+    for x in treeview.iterate_dict(b):
         print(x)
 
     
