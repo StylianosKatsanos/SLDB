@@ -61,11 +61,16 @@ class TreeviewSLD(ttk.Treeview):
         
         
 ###-------------- Code used for collection and organisation of data in Treeview --------------------------------------###
-        
+    
     def refresh_tree(self):
-        data = self.execute_db_query(self.database, self.first_query).fetchall()
+        data = self.execute_db_query(self.first_query).fetchall()
         tree_data = self.create_dict(pl_list=data)
-        self.iterate_dict(tree_data)
+        if self.get_children() == ():
+            self.iterate_dict(tree_data)
+        else:
+            self.delete(self.get_children()[0])
+            self.iterate_dict(tree_data)
+        
     
     def create_dict(self, pl_dict={}, pl_list=[], keyword="Start"):
         for e, i in enumerate(pl_list):
@@ -133,10 +138,9 @@ class TreeviewSLD(ttk.Treeview):
     def insert_entry(self, a,b):
         att_query = '''INSERT INTO Relationships (Entry_name, Attached_to) VALUES (?,?)'''
         pars = (a,b)
-        print(pars)
-        #execute_db_query(att_query, pars)
-        pass
-    
+        self.execute_db_query(att_query, pars)
+        self.refresh_tree()
+            
     def option_edit(self):
         pass
         
@@ -145,8 +149,8 @@ class TreeviewSLD(ttk.Treeview):
 
 ###------------------- General SQLite Query Execution Command ----------------------------------------###
 
-    def execute_db_query(self,filename, query, parameters=()):
-        with sqlite3.connect(filename) as conn:
+    def execute_db_query(self, query, parameters=()):
+        with sqlite3.connect(self.database) as conn:
             cursor = conn.cursor()
             query_result = cursor.execute(query, parameters)
             conn.commit()
