@@ -10,6 +10,8 @@ from tkinter import ttk
 import sys
 import sqlite3
 
+# ------------------- Non essential functions -----------------------------------#
+
 def create_dict(pl_list):
     pl_dict = {}
     for i in pl_list:
@@ -139,13 +141,22 @@ class TreeviewSLD(ttk.Treeview):
         att_query = '''INSERT INTO Relationships (Entry_name, Attached_to) VALUES (?,?)'''
         pars = (a,b)
         self.execute_db_query(att_query, pars)
+        self.insert(parent=b, index='end', iid=a)
         self.refresh_tree()
             
     def option_edit(self):
+        print(self.bbox(self.selected_iid))
+        self.selection_toggle("Main_A1")
         pass
         
     def option_delete(self):
-        pass
+        delete_query = '''DELETE FROM Relationships where Entry_name= ?'''
+        self.execute_db_query(delete_query, (self.selected_iid,))
+        self.delete(self.selected_iid) 
+        del_attached_query = '''DELETE FROM Relationships where Attached_to= ?'''
+        self.execute_db_query(delete_query, (self.selected_iid,))
+        #self.refresh_tree()
+
 
 ###------------------- General SQLite Query Execution Command ----------------------------------------###
 
@@ -159,7 +170,7 @@ class TreeviewSLD(ttk.Treeview):
      
 if __name__ == "__main__":
     
-    db_ = '''C:/Users/Admin/Documents/GitHub/Treeview-arranger/Inverter_Distribution_Project.db'''    
+    db_ = #Insert directory of database   
     
 #     plant = {
 #         "HV":{
