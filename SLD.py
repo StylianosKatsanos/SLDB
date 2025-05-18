@@ -9,6 +9,11 @@ import tkinter as tk
 from tkinter import ttk
 import sys
 import sqlite3
+import pathlib
+
+# Paths to the root of the project.
+PROJECT_ROOT = pathlib.Path(__file__).parent.resolve()
+DB_ROOT = PROJECT_ROOT / 'Projects.db'
 
 # ------------------- Non essential functions -----------------------------------#
 
@@ -74,6 +79,15 @@ class TreeviewSLD(ttk.Treeview):
             self.iterate_dict(tree_data)
         
     
+    def all_children(self):
+        if self.get_children() == ():
+            return children
+        else:
+            output.append(self.get_children()[0])
+            self.all_children(self.get_children()[1], children)
+        pass
+                          
+    
     def create_dict(self, pl_dict={}, pl_list=[], keyword="Start"):
         for e, i in enumerate(pl_list):
             if i[1] == keyword:
@@ -113,6 +127,7 @@ class TreeviewSLD(ttk.Treeview):
     def option_info(self):
         if self.selected_iid == "":
             return
+        self.all_children()
         print(self.selected_iid)   
         
     def option_attach(self):
@@ -122,7 +137,7 @@ class TreeviewSLD(ttk.Treeview):
         
         self.transient = tk.Toplevel()
         self.transient.title("Attach Entry")
-        self.transient.geometry("300x100")
+        self.transient.geometry("300x150")
         
         ttk.Label(self.transient, text="Give Entry Name:").grid(row=0, column=1)
         new_entry_widget = ttk.Entry(self.transient)
@@ -136,6 +151,19 @@ class TreeviewSLD(ttk.Treeview):
         self.update_button = ttk.Button(self.transient, text='Attach Entry', 
            command=lambda: self.insert_entry(new_entry_widget.get(), atk.get())).grid(row=3, column=1, sticky="n")
         
+        seperator = ttk.Separator(self.transient, orient='horizontal')
+        seperator.grid(row=4, columnspan=5, pady=5, padx=5, sticky='ew')
+        
+        ttk.Label(self.transient, text="Give Entry Name:").grid(row=5, column=1)
+        new_entry_widget = ttk.Entry(self.transient)
+        new_entry_widget.grid(row=5,column=2)
+        ttk.Label(self.transient, text="Attached To:").grid(row=6, column=1)
+        atk = ttk.Entry(self.transient)
+        atk.insert(0,attached_to)
+        atk.config(state='readonly')
+        atk.grid(row=6, column=2)
+        
+        
     
     def insert_entry(self, a,b):
         att_query = '''INSERT INTO Relationships (Entry_name, Attached_to) VALUES (?,?)'''
@@ -145,8 +173,39 @@ class TreeviewSLD(ttk.Treeview):
         self.refresh_tree()
             
     def option_edit(self):
-        print(self.bbox(self.selected_iid))
-        self.selection_toggle("Main_A1")
+        self.selected_iid = self.focus()
+        print(self.get_children())
+        
+        self.transient = tk.Toplevel()
+        self.transient.title("Edit Entry")
+        self.transient.geometry("300x100")
+        
+        ttk.Label(self.transient, text="New Entry Name:").grid(row=0, column=1)
+        new_entry_widget = ttk.Entry(self.transient)
+        new_entry_widget.grid(row=0, column=2)
+        ttk.Label(self.transient, text="Old Entry Name:").grid(row=1, column=1)
+        atk = ttk.Entry(self.transient)
+        atk.insert(0, self.selected_iid)
+        atk.config(state='readonly')
+        atk.grid(row=1, column=2)
+        
+        self.update_button = ttk.Button(self.transient, text= 'Edit Entry',
+            command=lambda: self.modify_entry(new_entry_widget.get(), self.selected_iid)).grid(row=3, column=1, sticky="n")
+        
+    def modify_entry(self, a,b):
+        edit_query = '''UPDATE Relationships SET Entry_name=? WHERE Entry_name=?'''
+        edit_att_query = '''UPDATE Relationships SET Attached_to=? WHERE Attached_to=?'''
+        pars = (a,b)
+        print(pars)
+        return
+        if b == "Start":
+            self.start = tk.Toplevel()
+            ttk.Label(self.start, text="Cannot modify entry named Start")
+            return
+        self.execute_db_query(edit_query, pars)
+        self.execute_db_query(edit_att_query, pars)
+        #self.item(b, text=a)
+        self.refresh_tree()
         pass
         
     def option_delete(self):
@@ -170,7 +229,7 @@ class TreeviewSLD(ttk.Treeview):
      
 if __name__ == "__main__":
     
-    db_ = #Insert directory of database   
+    db_ = DB_ROOT   
     
 #     plant = {
 #         "HV":{
