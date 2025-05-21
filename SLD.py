@@ -6,7 +6,7 @@ Created on Tue Feb 18 10:02:42 2025
 """
 
 import tkinter as tk 
-from tkinter import ttk
+from tkinter import ttk, messagebox
 import sys
 import sqlite3
 import pathlib
@@ -52,6 +52,7 @@ class TreeviewSLD(ttk.Treeview):
         
         self.database = db
         self.first_query = '''SELECT * FROM Relationships;'''
+        self.entries_drop = self.all_entries()
         
         super().__init__(master, **kw)
         
@@ -62,6 +63,7 @@ class TreeviewSLD(ttk.Treeview):
         self.context_menu.add_separator()
         self.context_menu.add_command(label = "Attach" , command=self.option_attach)
         self.context_menu.add_command(label = "Edit" , command=self.option_edit)
+        self.context_menu.add_separator()
         self.context_menu.add_command(label = "Delete" , command=self.option_delete)
         
         self.refresh_tree()
@@ -79,13 +81,12 @@ class TreeviewSLD(ttk.Treeview):
             self.iterate_dict(tree_data)
         
     
-    def all_children(self):
-        if self.get_children() == ():
-            return children
-        else:
-            output.append(self.get_children()[0])
-            self.all_children(self.get_children()[1], children)
-        pass
+    def all_entries(self):
+        
+        entries_query = '''SELECT Entry_name FROM Relationships;'''
+        data = self.execute_db_query(entries_query).fetchall()
+        data = [i[0] for i in data]
+        return data
                           
     
     def create_dict(self, pl_dict={}, pl_list=[], keyword="Start"):
@@ -127,7 +128,7 @@ class TreeviewSLD(ttk.Treeview):
     def option_info(self):
         if self.selected_iid == "":
             return
-        self.all_children()
+        self.all_entries()
         print(self.selected_iid)   
         
     def option_attach(self):
@@ -174,47 +175,52 @@ class TreeviewSLD(ttk.Treeview):
             
     def option_edit(self):
         self.selected_iid = self.focus()
-        print(self.get_children())
+        
+        old_entry = self.selected_iid
+        old_att = self.parent(old_entry)
         
         self.transient = tk.Toplevel()
         self.transient.title("Edit Entry")
         self.transient.geometry("300x100")
         
-        ttk.Label(self.transient, text="New Entry Name:").grid(row=0, column=1)
-        new_entry_widget = ttk.Entry(self.transient)
+        ttk.Label(self.transient, text="Entry Name:").grid(row=0, column=1)
+        new_entry_widget = ttk.Entry(self.transient, textvariable = tk.StringVar(self.transient, value = self.selected_iid), width=20)
+        new_entry_widget.insert('end',self.selected_iid)
         new_entry_widget.grid(row=0, column=2)
-        ttk.Label(self.transient, text="Old Entry Name:").grid(row=1, column=1)
-        atk = ttk.Entry(self.transient)
-        atk.insert(0, self.selected_iid)
-        atk.config(state='readonly')
+        ttk.Label(self.transient, text="Attached To:").grid(row=1, column=1)
+        atk = ttk.Combobox(self.transient, state='readonly', values=self.entries_drop, width=17)
         atk.grid(row=1, column=2)
+        atk.set(old_att)
         
         self.update_button = ttk.Button(self.transient, text= 'Edit Entry',
-            command=lambda: self.modify_entry(new_entry_widget.get(), self.selected_iid)).grid(row=3, column=1, sticky="n")
+            command=lambda: self.modify_entry(old_entry, old_att, new_entry_widget.get(), atk.get())).grid(row=3, column=1, sticky="n")
         
-    def modify_entry(self, a,b):
+    def modify_entry(self, old_a, old_b, a,b):
         edit_query = '''UPDATE Relationships SET Entry_name=? WHERE Entry_name=?'''
-        edit_att_query = '''UPDATE Relationships SET Attached_to=? WHERE Attached_to=?'''
-        pars = (a,b)
-        print(pars)
-        return
+        edit_att_query = '''UPDATE Relationships SET Attached_to=? WHERE Entry_name=?'''
+        parsa = (a, old_a)
+        parsb = (b, a)
         if b == "Start":
             self.start = tk.Toplevel()
             ttk.Label(self.start, text="Cannot modify entry named Start")
             return
-        self.execute_db_query(edit_query, pars)
-        self.execute_db_query(edit_att_query, pars)
+        self.execute_db_query(edit_query, parsa)
+        self.execute_db_query(edit_att_query, parsb)
         #self.item(b, text=a)
         self.refresh_tree()
         pass
         
     def option_delete(self):
-        delete_query = '''DELETE FROM Relationships where Entry_name= ?'''
-        self.execute_db_query(delete_query, (self.selected_iid,))
-        self.delete(self.selected_iid) 
-        del_attached_query = '''DELETE FROM Relationships where Attached_to= ?'''
-        self.execute_db_query(delete_query, (self.selected_iid,))
-        #self.refresh_tree()
+        res = messagebox.askquestion(title="Delete Entry", message="Are you sure you want to delete this entry and everything that is attached to it?", type="yesno")
+        if res == 'no':
+            return
+        else:
+            delete_query = '''DELETE FROM Relationships where Entry_name= ?'''
+            self.execute_db_query(delete_query, (self.selected_iid,))
+            self.delete(self.selected_iid) 
+            del_attached_query = '''DELETE FROM Relationships where Attached_to= ?'''
+            self.execute_db_query(delete_query, (self.selected_iid,))
+            #self.refresh_tree()
 
 
 ###------------------- General SQLite Query Execution Command ----------------------------------------###
