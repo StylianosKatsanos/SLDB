@@ -138,7 +138,7 @@ class TreeviewSLD(ttk.Treeview):
         
         self.transient = tk.Toplevel()
         self.transient.title("Attach Entry")
-        self.transient.geometry("300x150")
+        self.transient.geometry("300x100")
         
         ttk.Label(self.transient, text="Give Entry Name:").grid(row=0, column=1)
         new_entry_widget = ttk.Entry(self.transient)
@@ -146,32 +146,20 @@ class TreeviewSLD(ttk.Treeview):
         ttk.Label(self.transient, text="Attached To:").grid(row=1, column=1)
         atk = ttk.Entry(self.transient)
         atk.insert(0,attached_to)
-        atk.config(state='readonly')
         atk.grid(row=1, column=2)
         
-        self.update_button = ttk.Button(self.transient, text='Attach Entry', 
+        self.update_button = tk.Button(self.transient, text='Attach Entry', 
            command=lambda: self.insert_entry(new_entry_widget.get(), atk.get())).grid(row=3, column=1, sticky="n")
-        
-        seperator = ttk.Separator(self.transient, orient='horizontal')
-        seperator.grid(row=4, columnspan=5, pady=5, padx=5, sticky='ew')
-        
-        ttk.Label(self.transient, text="Give Entry Name:").grid(row=5, column=1)
-        new_entry_widget = ttk.Entry(self.transient)
-        new_entry_widget.grid(row=5,column=2)
-        ttk.Label(self.transient, text="Attached To:").grid(row=6, column=1)
-        atk = ttk.Entry(self.transient)
-        atk.insert(0,attached_to)
-        atk.config(state='readonly')
-        atk.grid(row=6, column=2)
-        
-        
     
-    def insert_entry(self, a,b):
+
+    def insert_entry(self,a,b):
         att_query = '''INSERT INTO Relationships (Entry_name, Attached_to) VALUES (?,?)'''
         pars = (a,b)
+        if b not in self.all_entries():
+            print("Not applicable entry to attach to")
+            return
         self.execute_db_query(att_query, pars)
-        self.insert(parent=b, index='end', iid=a)
-        self.refresh_tree()
+        self.insert(parent=b, index='end', iid=a, text=a)
             
     def option_edit(self):
         self.selected_iid = self.focus()
@@ -188,11 +176,11 @@ class TreeviewSLD(ttk.Treeview):
         new_entry_widget.insert('end',self.selected_iid)
         new_entry_widget.grid(row=0, column=2)
         ttk.Label(self.transient, text="Attached To:").grid(row=1, column=1)
-        atk = ttk.Combobox(self.transient, state='readonly', values=self.entries_drop, width=17)
+        atk = ttk.Combobox(self.transient, state='readonly', values=[x for x in self.entries_drop if x != old_entry], width=17)
         atk.grid(row=1, column=2)
         atk.set(old_att)
         
-        self.update_button = ttk.Button(self.transient, text= 'Edit Entry',
+        self.update_button = tk.Button(self.transient, text= 'Edit Entry',
             command=lambda: self.modify_entry(old_entry, old_att, new_entry_widget.get(), atk.get())).grid(row=3, column=1, sticky="n")
         
     def modify_entry(self, old_a, old_b, a,b):
@@ -256,12 +244,24 @@ if __name__ == "__main__":
         
     root = tk.Tk()
     root.title('Treeview Demo - Hierarchical Data')
-    root.geometry('400x200')
+    root.geometry('400x300')
     
-    root.rowconfigure(0, weight=1)
-    root.columnconfigure(0, weight=1)
+    #root.rowconfigure(0, weight=1)
+    #root.columnconfigure(0, weight=1)
     
-    treeview = TreeviewSLD(root, db_)
+    fr = ttk.LabelFrame(root, text='SLD')
+    fr.pack(fill='both', expand="yes")
+    f = ttk.Frame(root)
+    f.pack(fill='x', expand='yes', side='bottom')
+    
+    
+    treeview = TreeviewSLD(fr, db_)
+    refresh_button = tk.Button(f, text='Refresh', command=treeview.refresh_tree)
+    refresh_button.pack(side="left")
+    export_button = tk.Button(f, text='Export Report')
+    export_button.pack(side="left")
+    
+    
     treeview.pack(fill=tk.BOTH, expand=True)
     treeview.heading("#0", text="Plant")
      
