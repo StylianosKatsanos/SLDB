@@ -138,7 +138,7 @@ class TreeviewSLD(ttk.Treeview):
         
         self.transient = tk.Toplevel()
         self.transient.title("Attach Entry")
-        self.transient.geometry("300x150")
+        self.transient.geometry("300x200")
         
         ttk.Label(self.transient, text="Give Entry Name:").grid(row=0, column=1)
         new_entry_widget = ttk.Entry(self.transient)
@@ -155,15 +155,25 @@ class TreeviewSLD(ttk.Treeview):
         seperator = ttk.Separator(self.transient, orient='horizontal')
         seperator.grid(row=4, columnspan=5, pady=5, padx=5, sticky='ew')
         
-        ttk.Label(self.transient, text="Give Entry Name:").grid(row=5, column=1)
-        new_entry_widget = ttk.Entry(self.transient)
-        new_entry_widget.grid(row=5,column=2)
-        ttk.Label(self.transient, text="Attached To:").grid(row=6, column=1)
-        atk = ttk.Entry(self.transient)
-        atk.insert(0,attached_to)
-        atk.config(state='readonly')
-        atk.grid(row=6, column=2)
+        # --------------------- Batch Entries Insert ------------------------------------------------------#
         
+        
+        ttk.Label(self.transient, text="Give Batch Name:").grid(row=5, column=1)
+        batch_entry_widget = ttk.Entry(self.transient)
+        batch_entry_widget.grid(row=5,column=2)
+        #Insert Spinbox widget for number of entries
+        ttk.Label(self.transient, text="Number of Entries:").grid(row=6, column=1)
+        entry_num_widget = tk.Spinbox(self.transient, from_=1, to=100, width=10, relief='sunken')
+        entry_num_widget.config(state="normal", cursor="hand2", bd=3, justify="center", wrap=True)
+        entry_num_widget.grid(row=6,column=2)
+        ttk.Label(self.transient, text="Attached To:").grid(row=7, column=1)
+        atk_b = ttk.Entry(self.transient)
+        atk_b.insert(0,attached_to)
+        atk_b.config(state='readonly')
+        atk_b.grid(row=7, column=2)
+        
+        self.update_batch = ttk.Button(self.transient, text='Batch Entries', 
+           command=lambda: self.insert_entry_batch(batch_entry_widget.get(), entry_num_widget.get(),atk.get())).grid(row=8, column=1, sticky="n")
         
     
     def insert_entry(self, a,b):
@@ -172,7 +182,17 @@ class TreeviewSLD(ttk.Treeview):
         self.execute_db_query(att_query, pars)
         self.insert(parent=b, index='end', iid=a)
         self.refresh_tree()
-            
+    
+    def insert_entry_batch(self, a,b,c):
+        att_query = '''INSERT INTO Relationships (Entry_name, Attached_to) VALUES (?,?)'''
+        pars = (a,c)
+        
+        #Create loop for inserting all entries
+        
+        #self.execute_db_query(att_query, pars)
+        #self.insert(parent=b, index='end', iid=a)
+        #self.refresh_tree()
+    
     def option_edit(self):
         self.selected_iid = self.focus()
         
