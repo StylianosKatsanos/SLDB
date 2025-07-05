@@ -10,6 +10,7 @@ from tkinter import ttk, messagebox
 import sys
 import sqlite3
 import pathlib
+from SLD_setup import SLD_Setup
 
 # Paths to the root of the project.
 PROJECT_ROOT = pathlib.Path(__file__).parent.resolve()
@@ -17,7 +18,7 @@ DB_ROOT = PROJECT_ROOT / 'Projects.db'
 
 # ------------------- Non essential functions -----------------------------------#
 
-def create_dict(pl_list):
+def create_dict(pl_list: []):
     pl_dict = {}
     for i in pl_list:
         if i[1] == "Start":
@@ -183,7 +184,7 @@ class TreeviewSLD(ttk.Treeview):
         self.update_button = tk.Button(self.transient, text= 'Edit Entry',
             command=lambda: self.modify_entry(old_entry, old_att, new_entry_widget.get(), atk.get())).grid(row=3, column=1, sticky="n")
         
-    def modify_entry(self, old_a, old_b, a,b):
+    def modify_entry(self, old_a: str, old_b: str, a: str,b: str):
         edit_query = '''UPDATE Relationships SET Entry_name=? WHERE Entry_name=?'''
         edit_att_query = '''UPDATE Relationships SET Attached_to=? WHERE Entry_name=?'''
         parsa = (a, old_a)
@@ -219,6 +220,15 @@ class TreeviewSLD(ttk.Treeview):
             query_result = cursor.execute(query, parameters)
             conn.commit()
         return query_result
+
+
+###------------------- Initial Setup of Database -----------------------------------------------------###
+
+def initial_wind():
+    
+        init_win = tk.Toplevel()
+        SLD_Setup((init_win))
+        
 
      
 if __name__ == "__main__":
@@ -260,9 +270,14 @@ if __name__ == "__main__":
     refresh_button.pack(side="left")
     export_button = tk.Button(f, text='Export Report')
     export_button.pack(side="left")
+    setup_button = tk.Button(f, text='Tree Setup', command=initial_wind)
+    setup_button.pack(side="left")
     
     
     treeview.pack(fill=tk.BOTH, expand=True)
     treeview.heading("#0", text="Plant")
-     
+    
+    print(treeview.execute_db_query(treeview.first_query).fetchall())
+    
     treeview.mainloop()
+    
