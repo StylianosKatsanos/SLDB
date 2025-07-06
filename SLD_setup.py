@@ -36,6 +36,9 @@ class SLD_Setup:
         self.cb = tk.BooleanVar()
         self.string = tk.BooleanVar()
         
+        self.hvs = None
+        self.plots = None
+        
         hv_check = tk.Checkbutton(fr, variable=self.hv ,onvalue=True, offvalue=False, command=self.change_states)
         hv_check.grid(row=1, column=2)
         plot_check = tk.Checkbutton(fr, variable=self.plot, onvalue=True, offvalue=False, command=self.change_states)
@@ -53,15 +56,15 @@ class SLD_Setup:
         str_check = tk.Checkbutton(fr, variable=self.string ,onvalue=True, offvalue=False, command=self.change_states)
         str_check.grid(row=8, column=2)
         
-        self.hv_button = tk.Button(fr, text="HV Names:", state="disabled", command=self.create_input)
+        self.hv_button = tk.Button(fr, text="HV Names:", state="disabled", command= lambda: self.create_input(self.hv_entry))
         self.hv_button.grid(row=1, column=3)
-        hv_entry = tk.Entry(fr, width=30)
-        hv_entry.grid(row=1, column=4, padx=5)
+        self.hv_entry = tk.Entry(fr, width=30)
+        self.hv_entry.grid(row=1, column=4, padx=5, columnspan=2)
         
-        self.plot_button = tk.Button(fr, text="Plot Names:", state="disabled", command=self.create_input)
+        self.plot_button = tk.Button(fr, text="Plot Names:", state="disabled", command= lambda: self.create_input(self.plot_entry))
         self.plot_button.grid(row=2, column=3)
-        plot_entry = tk.Entry(fr, width=30)
-        plot_entry.grid(row=2, column=4, padx=5)
+        self.plot_entry = tk.Entry(fr, width=30)
+        self.plot_entry.grid(row=2, column=4, padx=5, columnspan=2)
         
         tk.Label(fr, text='Number of values:', padx=5).grid(row=3, column=3)
         tk.Label(fr, text='Number of values:', padx=5).grid(row=4, column=3)
@@ -83,6 +86,10 @@ class SLD_Setup:
         self.str_spin = tk.Spinbox(fr, from_=1, to=100, width=5, state="disabled")
         self.str_spin.grid(row=8, column=4, sticky='w')
         
+        tk.Label(fr, text='Plots:', relief="groove", padx=5, pady=5, width=15).grid(row=3, column=5)
+        self.main_plots = tk.Spinbox(fr, from_=1, to=100, width=5, state="disabled")
+        self.main_plots.grid(row=3, column=6, sticky='w')
+        
         init_win.mainloop()
         
     def get_all_checks(self)->list: 
@@ -98,28 +105,45 @@ class SLD_Setup:
             else:
                 states[e].config(state="disabled")
                 
-    def create_input(self):
+    
+    def update_entry(self, data, entry_to_update):
+        
+        if entry_to_update == self.hv_entry:
+            self.hvs = data
+            text = ';'.join(data)
+        elif entry_to_update == self.plot_entry:
+            self.plots = data
+            text = ';'.join(data)
+        
+        entry_to_update.delete("0", tk.END)
+        entry_to_update.insert(tk.END,text)
+        
+    def create_input(self, to_update):
         win = tk.Toplevel()
-        manual_input(win)
+        self.input_wind = manual_input(win, self.update_entry, to_update)
+        
 
                 
 class manual_input:
     
-    def __init__(self, root):
+    def __init__(self, root, func, entry):
         
         win = root
         win.geometry("400x300")
         win.title("Give manually the names of the entries")
         
-        add = tk.LabelFrame(win, text="Manual Inputs")
-        add.pack(fill='both', expand="no")
+        self.add = tk.LabelFrame(win, text="Manual Inputs")
+        self.add.pack(fill='both', expand="no")
+        
+        self.func = func
+        self.entry = entry
         
         see = tk.LabelFrame(win, text="List of Inputs Inputs")
         see.pack(fill='both', expand="yes", side='bottom')
         
-        self.input_entry = tk.Entry(add,width=40)
+        self.input_entry = tk.Entry(self.add,width=40)
         self.input_entry.pack(expand="yes",side="left")
-        add_button = tk.Button(add, text="Add Entry", command= lambda: self.entries_list.insert('end', self.input_entry.get()))
+        add_button = tk.Button(self.add, text="Add Entry", command=self.insert_entry)
         add_button.pack(side="left")
         
         self.entries_list = tk.Listbox(see)
@@ -127,11 +151,15 @@ class manual_input:
         delete_button = tk.Button(see, text="Delete Entry", command= self.delete_entry)
         delete_button.pack(side="bottom")
         
-        export_button = tk.Button(add, text="Export Entries", command= self.export_entries)
+        export_button = tk.Button(self.add, text="Export Entries", command= self.Parentfunc)
         export_button.pack(side="right")
         
         win.mainloop()
         
+    def insert_entry(self):
+        new_entry = self.input_entry.get()
+        self.entries_list.insert('end', new_entry)
+        self.input_entry.delete('0',tk.END)
         
     def delete_entry(self):
         
@@ -140,11 +168,9 @@ class manual_input:
             return
         else:
             self.entries_list.delete(item_delete)
-            
     
-    def export_entries(self):
-        entries = self.entries_list.get(0,'end')
-        return entries    
+    def Parentfunc(self):
+        self.func(self.entries_list.get(0,'end'), self.entry)
             
 
 if __name__ == "__main__":
