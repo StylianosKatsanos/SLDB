@@ -12,7 +12,7 @@ class SLD_Setup:
     def __init__(self, root):
         
         init_win = root
-        init_win.geometry("600x300")
+        init_win.geometry("700x300")
         
         fr = tk.LabelFrame(init_win, text="SLD Setup")
         fr.pack(fill='both', expand="yes")
@@ -21,16 +21,18 @@ class SLD_Setup:
         tk.Label(fr, text='Plot:', relief="groove", padx=5, pady=5, width=15).grid(row=2, column=1)
         tk.Label(fr, text='Main:', relief="groove", padx=5, pady=5, width=15).grid(row=3, column=1)
         tk.Label(fr, text='Skid:', relief="groove", padx=5, pady=5, width=15).grid(row=4, column=1)
-        tk.Label(fr, text='LV Panel:', relief="groove", padx=5, pady=5, width=15).grid(row=5, column=1)
-        tk.Label(fr, text='Inverter:', relief="groove", padx=5, pady=5, width=15).grid(row=6, column=1)
-        tk.Label(fr, text='Circuit Breaker:', relief="groove", padx=5, pady=5, width=15).grid(row=7, column=1)
-        tk.Label(fr, text='String:', relief="groove", padx=5, pady=5, width=15).grid(row=8, column=1)
+        tk.Label(fr, text='Transformer:', relief="groove", padx=5, pady=5, width=15).grid(row=5, column=1)
+        tk.Label(fr, text='LV Panel:', relief="groove", padx=5, pady=5, width=15).grid(row=6, column=1)
+        tk.Label(fr, text='Inverter:', relief="groove", padx=5, pady=5, width=15).grid(row=7, column=1)
+        tk.Label(fr, text='Circuit Breaker:', relief="groove", padx=5, pady=5, width=15).grid(row=8, column=1)
+        tk.Label(fr, text='String:', relief="groove", padx=5, pady=5, width=15).grid(row=9, column=1)
         
         
         self.hv = tk.BooleanVar()
         self.plot = tk.BooleanVar()
         self.main = tk.BooleanVar()
         self.skid = tk.BooleanVar()
+        self.trans = tk.BooleanVar()
         self.lv = tk.BooleanVar()
         self.inv = tk.BooleanVar()
         self.cb = tk.BooleanVar()
@@ -47,14 +49,16 @@ class SLD_Setup:
         main_check.grid(row=3, column=2)
         skid_check = tk.Checkbutton(fr, variable=self.skid,onvalue=True, offvalue=False, command=self.change_states)
         skid_check.grid(row=4, column=2)
+        trans_check = tk.Checkbutton(fr, variable=self.trans,onvalue=True, offvalue=False, command=self.change_states)
+        trans_check.grid(row=5, column=2)
         lv_check = tk.Checkbutton(fr, variable=self.lv,onvalue=True, offvalue=False, command=self.change_states)
-        lv_check.grid(row=5, column=2)
+        lv_check.grid(row=6, column=2)
         inv_check = tk.Checkbutton(fr, variable=self.inv, onvalue=True, offvalue=False, command=self.change_states)
-        inv_check.grid(row=6, column=2)
+        inv_check.grid(row=7, column=2)
         cb_check = tk.Checkbutton(fr, variable=self.cb , onvalue=True, offvalue=False, command=self.change_states)
-        cb_check.grid(row=7, column=2)
+        cb_check.grid(row=8, column=2)
         str_check = tk.Checkbutton(fr, variable=self.string ,onvalue=True, offvalue=False, command=self.change_states)
-        str_check.grid(row=8, column=2)
+        str_check.grid(row=9, column=2)
         
         self.hv_button = tk.Button(fr, text="HV Names:", state="disabled", command= lambda: self.create_input(self.hv_entry))
         self.hv_button.grid(row=1, column=3)
@@ -72,38 +76,73 @@ class SLD_Setup:
         tk.Label(fr, text='Number of values:', padx=5).grid(row=6, column=3)
         tk.Label(fr, text='Number of values:', padx=5).grid(row=7, column=3)
         tk.Label(fr, text='Number of values:', padx=5).grid(row=8, column=3)
+        tk.Label(fr, text='Number of values:', padx=5).grid(row=9, column=3)
         
-        self.main_spin = tk.Spinbox(fr, from_=1, to=100, width=5, state="disabled")
+        self.main_spin = tk.Spinbox(fr, from_=0, to=100, width=5, state="disabled")
         self.main_spin.grid(row=3, column=4, sticky='w')
-        self.skid_spin = tk.Spinbox(fr, from_=1, to=100, width=5, state="disabled")
+        self.skid_spin = tk.Spinbox(fr, from_=0, to=100, width=5, state="disabled")
         self.skid_spin.grid(row=4, column=4, sticky='w')
-        self.lv_spin = tk.Spinbox(fr, from_=1, to=100, width=5, state="disabled")
-        self.lv_spin.grid(row=5, column=4, sticky='w')
-        self.inv_spin = tk.Spinbox(fr, from_=1, to=100, width=5, state="disabled")
-        self.inv_spin.grid(row=6, column=4, sticky='w')
-        self.cb_spin = tk.Spinbox(fr, from_=1, to=100, width=5, state="disabled")
-        self.cb_spin.grid(row=7, column=4, sticky='w')
-        self.str_spin = tk.Spinbox(fr, from_=1, to=100, width=5, state="disabled")
-        self.str_spin.grid(row=8, column=4, sticky='w')
+        self.trans_spin = tk.Spinbox(fr, from_=0, to=100, width=5, state="disabled")
+        self.trans_spin.grid(row=5, column=4, sticky='w')
+        self.lv_spin = tk.Spinbox(fr, from_=0, to=100, width=5, state="disabled")
+        self.lv_spin.grid(row=6, column=4, sticky='w')
+        self.inv_spin = tk.Spinbox(fr, from_=0, to=100, width=5, state="disabled")
+        self.inv_spin.grid(row=7, column=4, sticky='w')
+        self.cb_spin = tk.Spinbox(fr, from_=0, to=100, width=5, state="disabled")
+        self.cb_spin.grid(row=8, column=4, sticky='w')
+        self.str_spin = tk.Spinbox(fr, from_=0, to=100, width=5, state="disabled")
+        self.str_spin.grid(row=9, column=4, sticky='w')
         
-        tk.Label(fr, text='Plots:', relief="groove", padx=5, pady=5, width=15).grid(row=3, column=5)
-        self.main_plots = tk.Spinbox(fr, from_=1, to=100, width=5, state="disabled")
-        self.main_plots.grid(row=3, column=6, sticky='w')
+        #------------  Main --------------------------------------#
+        tk.Label(fr, text='Skids:', padx=2, pady=2, width=10).grid(row=3, column=5, sticky='w')
+        self.main_skids = tk.Spinbox(fr, from_=0, to=100, width=5, state="disabled")
+        self.main_skids.grid(row=3, column=6, sticky='w')
+        
+        tk.Label(fr, text='Transformers:', padx=2, pady=2, width=15).grid(row=3, column=7, sticky='w')
+        self.main_trans = tk.Spinbox(fr, from_=0, to=100, width=5, state="disabled")
+        self.main_trans.grid(row=3, column=8, sticky='w')
+        
+        #------------ Skid --------------------------------------------#
+        tk.Label(fr, text='LV Panels:', padx=2, pady=2, width=10).grid(row=4, column=5, sticky='w')
+        self.skid_lvs = tk.Spinbox(fr, from_=0, to=100, width=5, state="disabled")
+        self.skid_lvs.grid(row=4, column=6, sticky='w')
+        
+        tk.Label(fr, text='Inverters:', padx=2, pady=2, width=15).grid(row=4, column=7, sticky='w')
+        self.skid_invs = tk.Spinbox(fr, from_=0, to=100, width=5, state="disabled")
+        self.skid_invs.grid(row=4, column=8, sticky='w')
+        
+        #------------ Transformer ----------------------------------------#
+        tk.Label(fr, text='LV Panels:', padx=2, pady=2, width=10).grid(row=5, column=5, sticky='w')
+        self.skid_lvs = tk.Spinbox(fr, from_=0, to=100, width=5, state="disabled")
+        self.skid_lvs.grid(row=5, column=6, sticky='w')
+        
+        tk.Label(fr, text='Inverters:', padx=2, pady=2, width=15).grid(row=5, column=7, sticky='w')
+        self.skid_invs = tk.Spinbox(fr, from_=0, to=100, width=5, state="disabled")
+        self.skid_invs.grid(row=5, column=8, sticky='w')
+        
         
         init_win.mainloop()
         
     def get_all_checks(self)->list: 
-        checks = [self.hv.get(), self.plot.get(), self.main.get(), self.skid.get(), self.lv.get(), self.inv.get(), self.cb.get(), self.string.get()]
+        checks = [self.hv.get(), self.plot.get(), self.main.get(), self.skid.get(), self.trans.get(), self.lv.get(), self.inv.get(), self.cb.get(), self.string.get()]
         return checks
     
     def change_states(self):
         levels = self.get_all_checks()
-        states = [self.hv_button,self.plot_button,self.main_spin,self.skid_spin,self.lv_spin,self.inv_spin,self.cb_spin,self.str_spin]
-        for e,i in enumerate(levels):
-            if i == True:
-                states[e].config(state="normal")
+        states = [[self.hv_button],[self.plot_button],[self.main_spin,self.main_skids, self.main_trans],[self.skid_spin],[self.trans_spin],[self.lv_spin],[self.inv_spin],[self.cb_spin],[self.str_spin]]
+        for e,check in enumerate(levels):
+            if check == True:
+                if isinstance(states[e], list):
+                    for i in states[e]:
+                        i.config(state="normal")
+                else:
+                    states[e].config(state="normal")
             else:
-                states[e].config(state="disabled")
+                if isinstance(states[e], list):
+                    for i in states[e]:
+                        i.config(state="disabled")
+                else:
+                    states[e].config(state="disabled")
                 
     
     def update_entry(self, data, entry_to_update):
