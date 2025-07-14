@@ -12,11 +12,13 @@ class SLD_Setup:
     def __init__(self, root):
         
         init_win = root
-        init_win.geometry("700x300")
+        init_win.geometry("700x350")
         
         fr = tk.LabelFrame(init_win, text="SLD Setup")
         fr.pack(fill='both', expand="yes")
         
+        
+        tk.Label(fr, text='Name:', relief="groove", padx=5, pady=5, width=15).grid(row=0, column=1)
         tk.Label(fr, text='HV:', relief="groove", padx=5, pady=5, width=15).grid(row=1, column=1)
         tk.Label(fr, text='Plot:', relief="groove", padx=5, pady=5, width=15).grid(row=2, column=1)
         tk.Label(fr, text='Main:', relief="groove", padx=5, pady=5, width=15).grid(row=3, column=1)
@@ -27,7 +29,7 @@ class SLD_Setup:
         tk.Label(fr, text='Circuit Breaker:', relief="groove", padx=5, pady=5, width=15).grid(row=8, column=1)
         tk.Label(fr, text='String:', relief="groove", padx=5, pady=5, width=15).grid(row=9, column=1)
         
-        
+        self.name = tk.StringVar()
         self.hv = tk.BooleanVar()
         self.plot = tk.BooleanVar()
         self.main = tk.BooleanVar()
@@ -41,6 +43,8 @@ class SLD_Setup:
         self.hvs = None
         self.plots = None
         
+        self.name_entry = tk.Entry(fr, width=30)
+        self.name_entry.grid(row=0, column=2, padx=5, columnspan=2)
         hv_check = tk.Checkbutton(fr, variable=self.hv ,onvalue=True, offvalue=False, command=self.change_states)
         hv_check.grid(row=1, column=2)
         plot_check = tk.Checkbutton(fr, variable=self.plot, onvalue=True, offvalue=False, command=self.change_states)
@@ -120,6 +124,8 @@ class SLD_Setup:
         self.skid_invs = tk.Spinbox(fr, from_=0, to=100, width=5, state="disabled")
         self.skid_invs.grid(row=5, column=8, sticky='w')
         
+        self.initial_button = tk.Button(fr, text="Setup", command = self.get_setup)
+        self.initial_button.grid(row=10, column=1)
         
         init_win.mainloop()
         
@@ -160,6 +166,11 @@ class SLD_Setup:
     def create_input(self, to_update):
         win = tk.Toplevel()
         self.input_wind = manual_input(win, self.update_entry, to_update)
+        
+        
+    def get_setup(self) -> list:
+        print(self.hvs)
+        pass
         
 
                 
