@@ -241,16 +241,23 @@ class TreeviewSLD(ttk.Treeview):
         
         types = ["HV", "Plot", "Main", "Skid", "Transformers", "LVPanels", "Inverters", "CircuitBreakers", "Strings"]
         
-        true_entries = [i for i in entries if i[1] == True]
+        true_entries = [i for i in entries if i[1]]
         
         print("From Browser:/n",entries)
         print("Add Only:/n",true_entries)
+
+        parameters = []
         
-        for e,i in enumerate(true_entries):
+        for e,i in enumerate(entries):
             if i[2] == 'New':
-                print('''Insert INTO Relationships (Entry_name, Attached_to, Type) VALUES ''' + str((i[3],true_entries[e-1][2],i[0])))
+                if entries[e-1][2] != 'New':
+                    print('''Insert INTO Relationships (Entry_name, Attached_to, Type) VALUES ''' + str((i[3],entries[e-1][2],i[0])))
+                    parameters.append((i[3],entries[e-1][2],i[0]))
+                elif entries[e-1][2] == 'New':
+                    print('''Insert INTO Relationships (Entry_name, Attached_to, Type) VALUES ''' + str((i[3],entries[e-1][3],i[0])))
+                    parameters.append((i[3], entries[e - 1][3], i[0]))
         
-            
+        debug_here = True
     
 ###------------------- General SQLite Query Execution Command ----------------------------------------###
 
@@ -258,6 +265,15 @@ class TreeviewSLD(ttk.Treeview):
         with sqlite3.connect(self.database) as conn:
             cursor = conn.cursor()
             query_result = cursor.execute(query, parameters)
+            conn.commit()
+        return query_result
+
+
+    def execute_mult_db_query(self, query, parameters=()):
+        with sqlite3.connect(self.database) as conn:
+            cursor = conn.cursor()
+            query_result = map(lambda x: cursor.execute(query, x), parameters)
+            print([i.fetchall() for i in query_result])
             conn.commit()
         return query_result
 
@@ -309,6 +325,8 @@ if __name__ == "__main__":
     project_button = tk.Button(f, text='Select Project', command=treeview.select_project)
     project_button.pack(side="left")
     line_button = tk.Button(f, text='Add line', command=treeview.initial_wind)
+    line_button.pack(side="left")
+    mult_button = tk.Button(f, text='Mult', command=treeview.execute_mult_db_query('''SELECT Entry_name FROM Relationships WHERE Type = ?''', (('HV',),('Main',),('Plot',))))
     line_button.pack(side="left")
     
     
