@@ -248,15 +248,19 @@ class TreeviewSLD(ttk.Treeview):
 
         parameters = []
         
-        for e,i in enumerate(entries):
-            if i[2] == 'New':
-                if entries[e-1][2] != 'New':
-                    print('''Insert INTO Relationships (Entry_name, Attached_to, Type) VALUES ''' + str((i[3],entries[e-1][2],i[0])))
-                    parameters.append((i[3],entries[e-1][2],i[0]))
-                elif entries[e-1][2] == 'New':
-                    print('''Insert INTO Relationships (Entry_name, Attached_to, Type) VALUES ''' + str((i[3],entries[e-1][3],i[0])))
-                    parameters.append((i[3], entries[e - 1][3], i[0]))
+        # List are created so: [Type, Check, Name, New]
         
+        for e,i in enumerate(true_entries):
+            if i[2] == 'New':
+                if true_entries[e-1][2] != 'New':
+                    print('''Insert INTO Relationships (Entry_name, Attached_to, Type) VALUES ''' + str((i[3],true_entries[e-1][2],i[0])))
+                    parameters.append((i[3],entries[e-1][2],i[0]))
+                elif true_entries[e-1][2] == 'New':
+                    print('''Insert INTO Relationships (Entry_name, Attached_to, Type) VALUES ''' + str((i[3],true_entries[e-1][3],i[0])))
+                    parameters.append((i[3], entries[e-1][3], i[0]))
+        
+        print(parameters)
+        self.execute_mult_db_query('''Insert INTO Relationships (Entry_name, Attached_to, Type) VALUES (?,?,?)''', parameters)
         debug_here = True
     
 ###------------------- General SQLite Query Execution Command ----------------------------------------###
