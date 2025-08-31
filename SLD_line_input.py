@@ -16,7 +16,7 @@ class SLD_Setup:
         
         self.func = func
         self.sld = sld
-        self.parts = ["HV","Plot","Main","Skid","Transformers","LVPanels","Inverters","CircuitBreakers"]
+        self.parts = ["HV","Plot","Main","Skid","Transformer","LVPanel","CircuitBreaker","Inverter"]
         
         fr = tk.LabelFrame(init_win, text="SLD Setup")
         fr.pack(fill='both', expand="yes")
@@ -27,8 +27,8 @@ class SLD_Setup:
         tk.Label(fr, text='Skid:', relief="groove", padx=5, pady=5, width=15).grid(row=4, column=1)
         tk.Label(fr, text='Transformer:', relief="groove", padx=5, pady=5, width=15).grid(row=5, column=1)
         tk.Label(fr, text='LV Panel:', relief="groove", padx=5, pady=5, width=15).grid(row=6, column=1)
-        tk.Label(fr, text='Inverter:', relief="groove", padx=5, pady=5, width=15).grid(row=7, column=1)
-        tk.Label(fr, text='Circuit Breaker:', relief="groove", padx=5, pady=5, width=15).grid(row=8, column=1)
+        tk.Label(fr, text='Circuit Breaker:', relief="groove", padx=5, pady=5, width=15).grid(row=7, column=1)
+        tk.Label(fr, text='Inverter:', relief="groove", padx=5, pady=5, width=15).grid(row=8, column=1)
         tk.Label(fr, text='String:', relief="groove", padx=5, pady=5, width=15).grid(row=9, column=1)
         
         self.hv = tk.BooleanVar()
@@ -120,7 +120,7 @@ class SLD_Setup:
         self.name_entries.append(self.skid_name)
         
         #--------------------------- Transformer --------------------------------------#
-        self.trans_spin = tk.ttk.Combobox(fr, textvariable=self.trans_items, values= ["New"] + self.sld["Transformers"])
+        self.trans_spin = tk.ttk.Combobox(fr, textvariable=self.trans_items, values= ["New"] + self.sld["Transformer"])
         self.trans_spin.grid(row=5, column=3, sticky='w')
         tk.Label(fr, text='New Name:', padx=5).grid(row=5, column=4)
         self.trans_name = tk.Entry(fr,width=20)
@@ -129,7 +129,7 @@ class SLD_Setup:
         self.name_entries.append(self.trans_name)
         
         #--------------------------- LV Panels --------------------------------------#
-        self.lv_spin = tk.ttk.Combobox(fr, textvariable=self.lv_items, values= ["New"] + self.sld["LVPanels"])
+        self.lv_spin = tk.ttk.Combobox(fr, textvariable=self.lv_items, values= ["New"] + self.sld["LVPanel"])
         self.lv_spin.grid(row=6, column=3, sticky='w')
         tk.Label(fr, text='New Name:', padx=5).grid(row=6, column=4)
         self.lv_name = tk.Entry(fr,width=20)
@@ -138,7 +138,7 @@ class SLD_Setup:
         self.name_entries.append(self.lv_name)
         
         #--------------------------- Circuit Breakers --------------------------------------#
-        self.cb_spin = tk.ttk.Combobox(fr, textvariable=self.cb_items, values= ["New"] + self.sld["CircuitBreakers"])
+        self.cb_spin = tk.ttk.Combobox(fr, textvariable=self.cb_items, values= ["New"] + self.sld["CircuitBreaker"])
         self.cb_spin.grid(row=7, column=3, sticky='w')
         tk.Label(fr, text='New Name:', padx=5).grid(row=7, column=4)
         self.cb_name = tk.Entry(fr,width=20)
@@ -147,7 +147,7 @@ class SLD_Setup:
         self.name_entries.append(self.cb_name)
         
         #--------------------------- Inverters --------------------------------------#
-        self.inv_spin = tk.ttk.Combobox(fr, textvariable=self.inv_items, values= ["New"] + self.sld["Inverters"])
+        self.inv_spin = tk.ttk.Combobox(fr, textvariable=self.inv_items, values= ["New"] + self.sld["Inverter"])
         self.inv_spin.grid(row=8, column=3, sticky='w')
         tk.Label(fr, text='New Name:', padx=5).grid(row=8, column=4)
         self.inv_name = tk.Entry(fr,width=20)
