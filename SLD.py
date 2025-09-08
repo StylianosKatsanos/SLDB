@@ -70,7 +70,6 @@ class TreeviewFrame(tk.Frame):
         line_button.pack(side="left")
         #mult_button = tk.Button(f, text='Mult', command=treeview.execute_mult_db_query('''SELECT Entry_name FROM Relationships WHERE Type = ?''', (('HV',),('Main',),('Plot',))))
         
-        
         treeview.pack(fill=tk.BOTH, expand=True)
         treeview.heading("#0", text="Plant")
         
@@ -111,6 +110,10 @@ class TreeviewSLD(ttk.Treeview):
 ###-------------- Code used for collection and organisation of data in Treeview --------------------------------------###
     
     def refresh_tree(self):
+
+        if self.database == None or self.plant == '':
+            return
+
         refresh_query = '''SELECT * FROM ''' + '''Relationships'''
         data = self.execute_db_query(refresh_query).fetchall()
         tree_data = self.create_dict(pl_list=data)
