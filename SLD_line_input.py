@@ -52,9 +52,7 @@ class SLD_Setup:
         self.inv_items = tk.StringVar()
         self.cb_items = tk.StringVar()
         
-        
         self.text_vars = [self.hv_items, self.plot_items, self.main_items, self.skid_items, self.trans_items, self.lv_items, self.inv_items, self.cb_items]
-        
         
         hv_check = tk.Checkbutton(fr, variable=self.hv ,onvalue=True, offvalue=False)
         hv_check.grid(row=1, column=2)
