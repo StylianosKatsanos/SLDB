@@ -1,4 +1,3 @@
-This README file contains basic information about the structure and the end goal of this coding script.
-It starts by extracting data from a database, containing entries and relations between them.
-Then the script arranges these entries based on their relationships in a python dictionary file, like a tree database.
-Finally in saves this tree in a json file.
+The purpose of this Python project is the creation of a Browser for the creation and editing of Single Line Diagram Batabases.
+It gives you the ability to create relational databases in SQLite and to modify them through a tkinter GUI.
+The data are presented with the use of a treeview widget, that represent the lines of wich each project consists off.
