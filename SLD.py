@@ -6,15 +6,15 @@ Created on Tue Feb 18 10:02:42 2025
 """
 
 import tkinter as tk 
-from tkinter import ttk, messagebox
-import sys
+from tkinter import ttk, messagebox, filedialog
 import sqlite3
 import pathlib
-from SLD_setup import SLD_Setup
+from SLD_line_input import SLD_Setup
+from DB_creator import ask_name
 
 # Paths to the root of the project.
 PROJECT_ROOT = pathlib.Path(__file__).parent.resolve()
-DB_ROOT = PROJECT_ROOT / 'Projects.db'
+DB_ROOT = PROJECT_ROOT / 'test.db'
 
 # ------------------- Non essential functions -----------------------------------#
 
@@ -41,16 +41,53 @@ def create_dict2(pl_dict={}, pl_list=[], keyword="Start"):
             continue
     return pl_dict
 
+###-------------------- LabelFrame to Host the Treeview Widget --------------------------###
 
+
+class TreeviewFrame(tk.Frame):
+    def __init__(self, root, project=DB_ROOT):
+        
+        self.root = root
+        self.project = project
+
+        super().__init__(self.root)
+        
+        fr = ttk.LabelFrame(root, text='SLD')
+        fr.pack(fill='both', expand="yes")
+        f = ttk.Frame(root)
+        f.pack(fill='x', expand='yes', side='bottom')
+        
+        treeview = TreeviewSLD(fr, self.project)
+        create_button = tk.Button(f, text='New DB', command=lambda: ask_name(tk.Toplevel()))
+        create_button.pack(side="left")
+        project_button = tk.Button(f, text='Select Project', command=treeview.select_project)
+        project_button.pack(side="left")
+        refresh_button = tk.Button(f, text='Refresh', command=treeview.refresh_tree)
+        refresh_button.pack(side="left")
+        #export_button = tk.Button(f, text='Export Report')
+        #export_button.pack(side="left")
+        line_button = tk.Button(f, text='Add line', command=treeview.initial_wind)
+        line_button.pack(side="left")
+        #mult_button = tk.Button(f, text='Mult', command=treeview.execute_mult_db_query('''SELECT Entry_name FROM Relationships WHERE Type = ?''', (('HV',),('Main',),('Plot',))))
+        
+        treeview.pack(fill=tk.BOTH, expand=True)
+        treeview.heading("#0", text="Plant")
+        
+        #print(treeview.execute_db_query(treeview.first_query).fetchall())
+        
+        treeview.mainloop()
+        
 ###-------------------- Treeview Widget for SLD -----------------------------------------###
 
 class TreeviewSLD(ttk.Treeview):
-    def __init__(self, master, db=(), **kw):
+    def __init__(self, master, db=(), plant='', **kw):
         
         if db == None:
             print("No SQLite database")
             return
         
+        self.sld = None
+        self.plant = plant
         self.database = db
         self.first_query = '''SELECT * FROM Relationships;'''
         self.entries_drop = self.all_entries()
@@ -67,13 +104,18 @@ class TreeviewSLD(ttk.Treeview):
         self.context_menu.add_separator()
         self.context_menu.add_command(label = "Delete" , command=self.option_delete)
         
-        self.refresh_tree()
+        #self.refresh_tree()
         
         
 ###-------------- Code used for collection and organisation of data in Treeview --------------------------------------###
     
     def refresh_tree(self):
-        data = self.execute_db_query(self.first_query).fetchall()
+
+        if self.database == None or self.plant == '':
+            return
+
+        refresh_query = '''SELECT * FROM ''' + '''Relationships'''
+        data = self.execute_db_query(refresh_query).fetchall()
         tree_data = self.create_dict(pl_list=data)
         if self.get_children() == ():
             self.iterate_dict(tree_data)
@@ -84,10 +126,17 @@ class TreeviewSLD(ttk.Treeview):
     
     def all_entries(self):
         
-        entries_query = '''SELECT Entry_name FROM Relationships;'''
+        entries_query = '''SELECT Type,Entry_name FROM Relationships ORDER BY Type;'''
         data = self.execute_db_query(entries_query).fetchall()
-        data = [i[0] for i in data]
-        return data
+        #data = [i[0] for i in data]
+        entries = {}
+        for pairs in data:
+            if pairs[0] not in entries.keys():
+                entries[pairs[0]] = []
+                entries[pairs[0]].append(pairs[1])
+            else:
+                entries[pairs[0]].append(pairs[1])
+        return entries
                           
     
     def create_dict(self, pl_dict={}, pl_list=[], keyword="Start"):
@@ -197,7 +246,6 @@ class TreeviewSLD(ttk.Treeview):
         self.execute_db_query(edit_att_query, parsb)
         #self.item(b, text=a)
         self.refresh_tree()
-        pass
         
     def option_delete(self):
         res = messagebox.askquestion(title="Delete Entry", message="Are you sure you want to delete this entry and everything that is attached to it?", type="yesno")
@@ -208,10 +256,80 @@ class TreeviewSLD(ttk.Treeview):
             self.execute_db_query(delete_query, (self.selected_iid,))
             self.delete(self.selected_iid) 
             del_attached_query = '''DELETE FROM Relationships where Attached_to= ?'''
-            self.execute_db_query(delete_query, (self.selected_iid,))
+            self.execute_db_query(del_attached_query, (self.selected_iid,))
             #self.refresh_tree()
+         
+    
+    def select_project(self):
 
+        file_path = filedialog.askopenfilename(
+            title= "Select a Database",
+            initialdir=PROJECT_ROOT,
+            filetypes=(("Databases", "*.db"), ("All files", "*.*"))
+        )
 
+        if file_path == '':
+            return
+        else:
+            self.database = file_path
+            self.plant = file_path.split('/')[-1].split('.')[0]
+            self.heading("#0", text=self.plant)
+            self.refresh_tree()
+            
+  
+    def initial_wind(self):
+    
+        if self.plant == '' and self.sld == None:
+            return
+        else:
+            init_win = tk.Toplevel()
+            SLD_Setup((init_win),self.sld, self.add_new_line)
+                     
+    def add_new_line(self, entries):
+        
+        #types = ["HV", "Plot", "Main", "Skid", "Transformers", "LVPanels", "Inverters", "CircuitBreakers", "Strings"]
+        #for_string_names = ["Skid", "Transformer", "LVPanel", "CircuitBreaker", "Inverter"]
+        
+        entries = [i for i in entries if i[1]]
+        string_name = []
+        parameters = []
+        string_parameters = []
+        last_entry_before_strings = ''
+        
+        # Lists are created so: [Type, Check, Name, New Name] - for Strings [Type, Check, Number of Strings]
+        
+        for e,i in enumerate(entries):
+            # for any entries other than strings
+            if i[0] != "Strings":
+
+                if i[2] == 'New':
+                    if e == 0:
+                        parameters.append((i[3], 'Start', i[0]))
+                    elif entries[e-1][2] == 'New':
+                        parameters.append((i[3], entries[e-1][3], i[0]))
+                    else:
+                        parameters.append((i[3], entries[e-1][2], i[0]))
+                    string_name.append(i[3].replace(i[0] + '_', '')) # Add another if for string applicable entries
+                    last_entry_before_strings = i[3]
+                else:
+                    string_name.append(i[2].replace(i[0] + '_', '')) # Add another if for string applicable entries
+                    last_entry_before_strings = i[2]
+
+            # only for strings        
+            else:
+                if i[1] == False:
+                    return
+                number_of_strings = i[-1]
+                name_base = '_'.join(string_name)
+                string_list = ["String_" + name_base + "_" + str(i) for i in range(1,number_of_strings+1)] # list comprehension create all string names by joining base name with a number
+                string_parameters = list(zip(string_list, [last_entry_before_strings] * len(string_list),["String"] * len(string_list)))
+        
+        if parameters:
+            self.execute_mult_db_query('''Insert INTO Relationships (Entry_name, Attached_to, Type) VALUES (?,?,?)''', parameters)
+        if string_parameters:
+            self.execute_mult_db_query('''Insert INTO Relationships (Entry_name, Attached_to, Type) VALUES (?,?,?)''', string_parameters)
+        self.refresh_tree()
+    
 ###------------------- General SQLite Query Execution Command ----------------------------------------###
 
     def execute_db_query(self, query, parameters=()):
@@ -222,62 +340,28 @@ class TreeviewSLD(ttk.Treeview):
         return query_result
 
 
+    def execute_mult_db_query(self, query, parameters=()):
+        with sqlite3.connect(self.database) as conn:
+            cursor = conn.cursor()
+            query_result = map(lambda x: cursor.execute(query, x), parameters)
+            print([i.fetchall() for i in query_result])
+            conn.commit()
+        return query_result
+
+
 ###------------------- Initial Setup of Database -----------------------------------------------------###
 
-def initial_wind():
-    
-        init_win = tk.Toplevel()
-        SLD_Setup((init_win))
         
 
      
 if __name__ == "__main__":
     
     db_ = DB_ROOT   
-    
-#     plant = {
-#         "HV":{
-#             "Plot A":{
-#                 "Main A1":{
-#                     "Skid 1",
-#                     "Skid 2",
-#                     "Skid 3"
-#                     },
-#                 "Main A2":{}
-#                 },
-#             "Plot B":{
-#                 "Main B1":{}, 
-#                 "Main B2":{}
-#                 }
-#             }
-#         }
-        
+       
     root = tk.Tk()
     root.title('Treeview Demo - Hierarchical Data')
     root.geometry('400x300')
     
-    #root.rowconfigure(0, weight=1)
-    #root.columnconfigure(0, weight=1)
-    
-    fr = ttk.LabelFrame(root, text='SLD')
-    fr.pack(fill='both', expand="yes")
-    f = ttk.Frame(root)
-    f.pack(fill='x', expand='yes', side='bottom')
-    
-    
-    treeview = TreeviewSLD(fr, db_)
-    refresh_button = tk.Button(f, text='Refresh', command=treeview.refresh_tree)
-    refresh_button.pack(side="left")
-    export_button = tk.Button(f, text='Export Report')
-    export_button.pack(side="left")
-    setup_button = tk.Button(f, text='Tree Setup', command=initial_wind)
-    setup_button.pack(side="left")
-    
-    
-    treeview.pack(fill=tk.BOTH, expand=True)
-    treeview.heading("#0", text="Plant")
-    
-    print(treeview.execute_db_query(treeview.first_query).fetchall())
-    
-    treeview.mainloop()
+    label = TreeviewFrame(root)
+    label.mainloop()
     

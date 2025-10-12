@@ -18,7 +18,6 @@ class SLD_Setup:
         fr.pack(fill='both', expand="yes")
         
         
-        tk.Label(fr, text='Name:', relief="groove", padx=5, pady=5, width=15).grid(row=0, column=1)
         tk.Label(fr, text='HV:', relief="groove", padx=5, pady=5, width=15).grid(row=1, column=1)
         tk.Label(fr, text='Plot:', relief="groove", padx=5, pady=5, width=15).grid(row=2, column=1)
         tk.Label(fr, text='Main:', relief="groove", padx=5, pady=5, width=15).grid(row=3, column=1)
@@ -28,6 +27,7 @@ class SLD_Setup:
         tk.Label(fr, text='Inverter:', relief="groove", padx=5, pady=5, width=15).grid(row=7, column=1)
         tk.Label(fr, text='Circuit Breaker:', relief="groove", padx=5, pady=5, width=15).grid(row=8, column=1)
         tk.Label(fr, text='String:', relief="groove", padx=5, pady=5, width=15).grid(row=9, column=1)
+        
         
         self.name = tk.StringVar()
         self.hv = tk.BooleanVar()
@@ -43,8 +43,7 @@ class SLD_Setup:
         self.hvs = None
         self.plots = None
         
-        self.name_entry = tk.Entry(fr, width=30)
-        self.name_entry.grid(row=0, column=2, padx=5, columnspan=2)
+        
         hv_check = tk.Checkbutton(fr, variable=self.hv ,onvalue=True, offvalue=False, command=self.change_states)
         hv_check.grid(row=1, column=2)
         plot_check = tk.Checkbutton(fr, variable=self.plot, onvalue=True, offvalue=False, command=self.change_states)
@@ -61,7 +60,7 @@ class SLD_Setup:
         inv_check.grid(row=7, column=2)
         cb_check = tk.Checkbutton(fr, variable=self.cb , onvalue=True, offvalue=False, command=self.change_states)
         cb_check.grid(row=8, column=2)
-        str_check = tk.Checkbutton(fr, variable=self.string ,onvalue=True, offvalue=False, command=self.change_states)
+        str_check = tk.Checkbutton(fr, variable=self.string , onvalue=True, offvalue=False, command=self.change_states)
         str_check.grid(row=9, column=2)
         
         self.hv_button = tk.Button(fr, text="HV Names:", state="disabled", command= lambda: self.create_input(self.hv_entry))
@@ -82,6 +81,7 @@ class SLD_Setup:
         tk.Label(fr, text='Number of values:', padx=5).grid(row=8, column=3)
         tk.Label(fr, text='Number of values:', padx=5).grid(row=9, column=3)
         
+        
         self.main_spin = tk.Spinbox(fr, from_=0, to=100, width=5, state="disabled")
         self.main_spin.grid(row=3, column=4, sticky='w')
         self.skid_spin = tk.Spinbox(fr, from_=0, to=100, width=5, state="disabled")
@@ -96,33 +96,42 @@ class SLD_Setup:
         self.cb_spin.grid(row=8, column=4, sticky='w')
         self.str_spin = tk.Spinbox(fr, from_=0, to=100, width=5, state="disabled")
         self.str_spin.grid(row=9, column=4, sticky='w')
+
         
         #------------  Main --------------------------------------#
-        tk.Label(fr, text='Skids:', padx=2, pady=2, width=10).grid(row=3, column=5, sticky='w')
-        self.main_skids = tk.Spinbox(fr, from_=0, to=100, width=5, state="disabled")
-        self.main_skids.grid(row=3, column=6, sticky='w')
-        
-        tk.Label(fr, text='Transformers:', padx=2, pady=2, width=15).grid(row=3, column=7, sticky='w')
-        self.main_trans = tk.Spinbox(fr, from_=0, to=100, width=5, state="disabled")
-        self.main_trans.grid(row=3, column=8, sticky='w')
+        tk.Label(fr, text='How to split:', padx=2, pady=2, width=10).grid(row=3, column=5, sticky='w')
+        self.main_split = tk.Entry(fr,width=20, state="disabled")
+        self.main_split.grid(row=3, column=6, sticky='w')
         
         #------------ Skid --------------------------------------------#
-        tk.Label(fr, text='LV Panels:', padx=2, pady=2, width=10).grid(row=4, column=5, sticky='w')
-        self.skid_lvs = tk.Spinbox(fr, from_=0, to=100, width=5, state="disabled")
-        self.skid_lvs.grid(row=4, column=6, sticky='w')
-        
-        tk.Label(fr, text='Inverters:', padx=2, pady=2, width=15).grid(row=4, column=7, sticky='w')
-        self.skid_invs = tk.Spinbox(fr, from_=0, to=100, width=5, state="disabled")
-        self.skid_invs.grid(row=4, column=8, sticky='w')
+        tk.Label(fr, text='How to split:', padx=2, pady=2, width=10).grid(row=4, column=5, sticky='w')
+        self.skid_split =  tk.Entry(fr,width=20, state="disabled")
+        self.skid_split.grid(row=4, column=6, sticky='w')
         
         #------------ Transformer ----------------------------------------#
-        tk.Label(fr, text='LV Panels:', padx=2, pady=2, width=10).grid(row=5, column=5, sticky='w')
-        self.skid_lvs = tk.Spinbox(fr, from_=0, to=100, width=5, state="disabled")
-        self.skid_lvs.grid(row=5, column=6, sticky='w')
+        tk.Label(fr, text='How to split:', padx=2, pady=2, width=10).grid(row=5, column=5, sticky='w')
+        self.trans_split = tk.Entry(fr,width=20, state="disabled")
+        self.trans_split.grid(row=5, column=6, sticky='w')
         
-        tk.Label(fr, text='Inverters:', padx=2, pady=2, width=15).grid(row=5, column=7, sticky='w')
-        self.skid_invs = tk.Spinbox(fr, from_=0, to=100, width=5, state="disabled")
-        self.skid_invs.grid(row=5, column=8, sticky='w')
+        #------------ LV Panels ----------------------------------------#
+        tk.Label(fr, text='How to split:', padx=2, pady=2, width=10).grid(row=6, column=5, sticky='w')
+        self.lv_split = tk.Entry(fr,width=20, state="disabled")
+        self.lv_split.grid(row=6, column=6, sticky='w')
+        
+        #------------ Inverters ----------------------------------------#
+        tk.Label(fr, text='How to split:', padx=2, pady=2, width=10).grid(row=7, column=5, sticky='w')
+        self.inv_split = tk.Entry(fr,width=20, state="disabled")
+        self.inv_split.grid(row=7, column=6, sticky='w')
+        
+        #------------ Circuit Breakers ----------------------------------------#
+        tk.Label(fr, text='How to split:', padx=2, pady=2, width=10).grid(row=8, column=5, sticky='w')
+        self.cb_split = tk.Entry(fr,width=20, state="disabled")
+        self.cb_split.grid(row=8, column=6, sticky='w')
+        
+        #------------ Strings ----------------------------------------#
+        tk.Label(fr, text='How to split:', padx=2, pady=2, width=10).grid(row=9, column=5, sticky='w')
+        self.str_split = tk.Entry(fr,width=20, state="disabled")
+        self.str_split.grid(row=9, column=6, sticky='w')
         
         self.initial_button = tk.Button(fr, text="Setup", command = self.get_setup)
         self.initial_button.grid(row=10, column=1)
@@ -135,7 +144,9 @@ class SLD_Setup:
     
     def change_states(self):
         levels = self.get_all_checks()
-        states = [[self.hv_button],[self.plot_button],[self.main_spin,self.main_skids, self.main_trans],[self.skid_spin],[self.trans_spin],[self.lv_spin],[self.inv_spin],[self.cb_spin],[self.str_spin]]
+        states = [[self.hv_button],[self.plot_button],[self.main_spin,self.main_split],
+                  [self.skid_spin, self.skid_split],[self.trans_spin, self.trans_split],
+                  [self.lv_spin, self.lv_split],[self.inv_spin, self.inv_split],[self.cb_spin, self.cb_split],[self.str_spin, self.str_split]]
         for e,check in enumerate(levels):
             if check == True:
                 if isinstance(states[e], list):
