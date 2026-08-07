@@ -1,11 +1,11 @@
 
 import sys
 
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QApplication
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QApplication
 
-from model import RelationshipRow
-from view import SLDView
+from sld.model import RelationshipRow
+from sld.view import SLDView
 
 
 def get_app():

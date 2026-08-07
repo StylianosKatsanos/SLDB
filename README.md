@@ -26,4 +26,3 @@ Do not forget to clone Repository: `git clone https://github.com/StylianosKatsan
 
 1. Run `python -m pytest your_test`
 2. To run all tests, run: `pytest`
-3. To check test coverage, run: `pytest --cov=src; rm .coverage` (shows coverage in terminal)
