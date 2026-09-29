@@ -35,6 +35,7 @@ def sld_db_path_for_project(project_name: str, root:
 class SLDMainWindow(QMainWindow):
     def __init__(self, project: str = "", db_path: pathlib.Path | str | None = None, parent=None) -> None:
         super().__init__(parent)
+        self.parent_window = parent
         
         self.project = project
         self.db_path = pathlib.Path(db_path) if db_path else sld_db_path_for_project(project)
@@ -75,7 +76,7 @@ class SLDMainWindow(QMainWindow):
         project = project.strip() if ok else ""
         if project == "":
             return
-        self.db_path = PROJECT_ROOT / (f"{project}.db" if project else DB_ROOT.name)
+        self.db_path = SLD_DB_ROOT / f"{project}.db"
         self.model = SLDModel(db_path = self.db_path, project_name = project)
         self.controller = SLDController(self.model, self.view)
         self.statusBar().showMessage(f"Created New Database: {self.db_path.name}")
@@ -94,7 +95,7 @@ class SLDMainWindow(QMainWindow):
 
         try:
             # Initialize or reload model with selected DB
-            file_name = file_path.rsplit('/')[-1].strip('.db')
+            file_name = file_path.rsplit('/')[-1].split('.')
             self.model = SLDModel(file_path, file_name)
 
             # Reconnect controller + view if needed
@@ -135,7 +136,8 @@ class SLDMainWindow(QMainWindow):
             QMessageBox.No
         )
         if reply == QMessageBox.Yes:
-            QApplication.quit()
+            self.close()
+            self.parent_window.show()
     
     def about_project(self):
         """Open Dialog box with information about the project"""

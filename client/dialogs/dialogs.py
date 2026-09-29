@@ -159,3 +159,34 @@ class ModifyProjectDialog(QDialog):
 
     def _disable_plan(self, _):
         self.cmb_plan_col.setEnabled(self.cmb_act_col.currentText() == '')
+
+class AboutDialog(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        self.setWindowTitle("About SLD Tool")
+        self.setMinimumWidth(300)
+
+        layout = QVBoxLayout(self)
+
+        title = QLabel("<h2>SLD Tool v1.0</h2>")
+        title.setAlignment(Qt.AlignCenter)
+
+        author = QLabel("<b>Created by:</b> Stylianos Katsanos")
+        author.setAlignment(Qt.AlignCenter)
+
+        description = QLabel("Data Storage tool for Single Line Diagrams")
+        description.setAlignment(Qt.AlignCenter)
+
+        link = QLabel('<a href="https://github.com/stylianoskatsanos">GitHub Repository</a>')
+        link.setAlignment(Qt.AlignCenter)
+        link.setOpenExternalLinks(True)
+
+        close_btn = QPushButton("Close")
+        close_btn.clicked.connect(self.accept)
+
+        layout.addWidget(title)
+        layout.addWidget(author)
+        layout.addWidget(description)
+        layout.addWidget(link)
+        layout.addWidget(close_btn)
