@@ -41,7 +41,7 @@ from .filter_window_qt import FilterWindowDialog, FilterSpec
 from .repositories.repo import SQLiteRepo
 from .dialogs.dialogs import (
     AddProjectDialog, AddManagerDialog,
-    ModifyManagerDialog, ModifyProjectDialog, AboutDialog
+    ModifyManagerDialog, ModifyProjectDialog, AboutClientDialog
 )
 from config.paths import CLIENT_DB
 
@@ -459,7 +459,7 @@ class MainWindow(QMainWindow):
             self.message.setText('Select a project first to open its SLD')
             return
         
-        if not hasattr(self, "_slf_windows"):
+        if not hasattr(self, "_sld_windows"):
             self._sld_windows = {}
             
         existing = self._sld_windows.get(project_name)
@@ -477,7 +477,7 @@ class MainWindow(QMainWindow):
 
     def open_about(self):
 
-        dialog = AboutDialog(self)
+        dialog = AboutClientDialog(self)
 
         dialog.exec()
 

@@ -13,7 +13,8 @@ from .controller import SLDController
 from .model import SLDModel
 from .view import SLDView
 from .Menu_Bar import SLDMenuBar
-from .dialogs import AboutDialog
+from .dialogs import AboutSLDDialog
+
 
 from config.paths import CLIENT_DB
 from config.paths import SLD_DB_ROOT
@@ -36,36 +37,42 @@ class SLDMainWindow(QMainWindow):
     def __init__(self, project: str = "", db_path: pathlib.Path | str | None = None, parent=None) -> None:
         super().__init__(parent)
         self.parent_window = parent
+
+        if self.parent_window:
+            self.project = project
+            self.db_path = pathlib.Path(db_path) if db_path else sld_db_path_for_project(project)
+
+            self.setWindowTitle("SLD Graph Editor (PySide MVC)")
+            self.resize(980, 620)
+
+            # db_path = PROJECT_ROOT / (f"{project}.db" if project else DB_ROOT.name)
+            self.model = SLDModel(self.db_path, self.project)
+
+            self.view = SLDView(self)
+            self.controller = SLDController(self.model, self.view)
+            self.setCentralWidget(self.view)
+
+            self.Menubar = SLDMenuBar()
+            self.setMenuBar(self.Menubar)
+
+            self.Menubar.newSLD_action.triggered.connect(self.new_SLD_clicked)
+            self.Menubar.openSLD_action.triggered.connect(self.open_SLD_clicked)
+            self.Menubar.exportSLD_action.triggered.connect(self.export_SLD_clicked)
+            self.Menubar.exitSLD_action.triggered.connect(self.confirm_exit)
+            self.Menubar.about_action.triggered.connect(self.about_project)
+
+            self.statusBar().showMessage(f"Database: {self.db_path.name}")
+
+        else:
+            QApplication.quit()
         
-        self.project = project
-        self.db_path = pathlib.Path(db_path) if db_path else sld_db_path_for_project(project)
-        
-        self.setWindowTitle("SLD Graph Editor (PySide MVC)")
-        self.resize(980, 620)
-        
-        #db_path = PROJECT_ROOT / (f"{project}.db" if project else DB_ROOT.name)
-        self.model = SLDModel(self.db_path, self.project)
-        
-        self.view = SLDView(self)
-        self.controller = SLDController(self.model, self.view)
-        self.setCentralWidget(self.view)
-        
-        self.Menubar = SLDMenuBar()
-        self.setMenuBar(self.Menubar)
-        
-        self.Menubar.newSLD_action.triggered.connect(self.new_SLD_clicked)
-        self.Menubar.openSLD_action.triggered.connect(self.open_SLD_clicked)
-        self.Menubar.exportSLD_action.triggered.connect(self.export_SLD_clicked)
-        self.Menubar.exitSLD_action.triggered.connect(self.confirm_exit)
-        self.Menubar.about_action.triggered.connect(self.about_project)
-        
-        self.statusBar().showMessage(f"Database: {self.db_path.name}")
-        
-        def closeEvent(self, event):
-            close = getattr(self.model, "close", None)
-            if callable(close):
-                close()
-            super().closeEvent(event)
+    def closeEvent(self, event):
+        close = getattr(self.model, "close", None)
+        if callable(close):
+            close()
+        if self.parent_window is not None:
+            self.parent_window.show()
+        super().closeEvent(event)
     
     def new_SLD_clicked(self):
         project, ok = QInputDialog.getText(
@@ -76,11 +83,11 @@ class SLDMainWindow(QMainWindow):
         project = project.strip() if ok else ""
         if project == "":
             return
-        self.db_path = SLD_DB_ROOT / f"{project}.db"
+        self.db_path =  sld_db_path_for_project(project) #SLD_DB_ROOT / f"{project}.db"
         self.model = SLDModel(db_path = self.db_path, project_name = project)
         self.controller = SLDController(self.model, self.view)
         self.statusBar().showMessage(f"Created New Database: {self.db_path.name}")
-        self.view.tree.setHeaderLabels([project])
+        #self.view.tree.setHeaderLabels([project])
         
     def open_SLD_clicked(self):
         file_path, _ = QFileDialog.getOpenFileName(
@@ -95,7 +102,8 @@ class SLDMainWindow(QMainWindow):
 
         try:
             # Initialize or reload model with selected DB
-            file_name = file_path.rsplit('/')[-1].split('.')
+            #file_name = file_path.rsplit('/')[-1].split('.')
+            file_name = pathlib.Path(file_path).stem
             self.model = SLDModel(file_path, file_name)
 
             # Reconnect controller + view if needed
@@ -137,12 +145,11 @@ class SLDMainWindow(QMainWindow):
         )
         if reply == QMessageBox.Yes:
             self.close()
-            self.parent_window.show()
     
     def about_project(self):
         """Open Dialog box with information about the project"""
         
-        dialog = AboutDialog(self)
+        dialog = AboutSLDDialog(self)
         
         dialog.exec()
         
