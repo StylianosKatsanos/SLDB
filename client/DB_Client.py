@@ -31,8 +31,9 @@ from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget,
     QLabel, QGroupBox, QPushButton, QComboBox,
     QVBoxLayout, QHBoxLayout,
-    QMessageBox, QDialog,
-    QSplitter, QTableView, QAbstractItemView, QSizePolicy
+    QMessageBox, QDialog, QStyle,
+    QSplitter, QTableView, QAbstractItemView, QSizePolicy,
+    QToolButton
 )
 
 from .treeview_edit_qt import ProjectTableView
@@ -40,7 +41,7 @@ from .filter_window_qt import FilterWindowDialog, FilterSpec
 from .repositories.repo import SQLiteRepo
 from .dialogs.dialogs import (
     AddProjectDialog, AddManagerDialog,
-    ModifyManagerDialog, ModifyProjectDialog
+    ModifyManagerDialog, ModifyProjectDialog, AboutClientDialog
 )
 from config.paths import CLIENT_DB
 
@@ -77,13 +78,25 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(root)
 
         main = QVBoxLayout(root)
-        
+
+        #Message Area
         self.message = QLabel('')
         self.message.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.message.setMaximumHeight(50)
         self.message.setStyleSheet('color: red;')
         self.message.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
-        main.addWidget(self.message)
+
+        # Info Button
+        top_row = QHBoxLayout()
+        top_row.addWidget(self.message, 1)
+        self.btn_info = QToolButton()
+        self.btn_info.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_MessageBoxInformation))
+        self.btn_info.setToolTip('About this window')
+        self.btn_info.setAutoRaise(True)
+        self.btn_info.clicked.connect(self.open_about)
+        top_row.addWidget(self.btn_info, 0, Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignRight)
+
+        main.addLayout(top_row)
 
         # Data View
         gb_data = QGroupBox('Data View')
@@ -446,7 +459,7 @@ class MainWindow(QMainWindow):
             self.message.setText('Select a project first to open its SLD')
             return
         
-        if not hasattr(self, "_slf_windows"):
+        if not hasattr(self, "_sld_windows"):
             self._sld_windows = {}
             
         existing = self._sld_windows.get(project_name)
@@ -461,6 +474,12 @@ class MainWindow(QMainWindow):
         
         self._sld_windows[project_name] = window
         window.show()
+
+    def open_about(self):
+
+        dialog = AboutClientDialog(self)
+
+        dialog.exec()
 
 def main():
     import sys

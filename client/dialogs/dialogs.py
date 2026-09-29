@@ -159,3 +159,34 @@ class ModifyProjectDialog(QDialog):
 
     def _disable_plan(self, _):
         self.cmb_plan_col.setEnabled(self.cmb_act_col.currentText() == '')
+
+class AboutClientDialog(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        self.setWindowTitle("About Compliance Project Rollout Tool")
+        self.setMinimumWidth(300)
+
+        layout = QVBoxLayout(self)
+
+        title = QLabel("<h2>SLD Tool v1.0</h2>")
+        title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        author = QLabel("<b>Created by:</b> Stylianos Katsanos")
+        author.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        description = QLabel("Data Storage tool for Solar Projects")
+        description.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        link = QLabel('<a href="https://github.com/stylianoskatsanos">GitHub Repository</a>')
+        link.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        link.setOpenExternalLinks(True)
+
+        close_btn = QPushButton("Close")
+        close_btn.clicked.connect(self.accept)
+
+        layout.addWidget(title)
+        layout.addWidget(author)
+        layout.addWidget(description)
+        layout.addWidget(link)
+        layout.addWidget(close_btn)
