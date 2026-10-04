@@ -6,7 +6,7 @@ from typing import List, Optional, Sequence, Tuple
 
 from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt, Signal
 
-from .model import RelationshipRow
+from .model import ROOT_TYPE, RelationshipRow
 
 
 class DetailTableModel(QAbstractTableModel):
@@ -23,6 +23,8 @@ class DetailTableModel(QAbstractTableModel):
         super().__init__(parent)
         self._rows: List[Tuple[str, str]] = []
         self._suppress_change_signal = False
+        # The project root's name, parent and type cannot be edited.
+        self._read_only = False
 
     def rowCount(self, parent: QModelIndex = QModelIndex()) -> int:
         if parent.isValid():
@@ -65,7 +67,7 @@ class DetailTableModel(QAbstractTableModel):
         if not index.isValid():
             return Qt.NoItemFlags
         base = Qt.ItemIsSelectable | Qt.ItemIsEnabled
-        if index.column() == 1:
+        if index.column() == 1 and not self._read_only:
             base |= Qt.ItemIsEditable
         return base
 
@@ -90,6 +92,7 @@ class DetailTableModel(QAbstractTableModel):
         self.beginResetModel()
         self._suppress_change_signal = True
         self._rows = list(rows)
+        self._read_only = rel is not None and rel.entry_type == ROOT_TYPE
         self._suppress_change_signal = False
         self.endResetModel()
 

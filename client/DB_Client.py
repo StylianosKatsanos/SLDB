@@ -93,7 +93,6 @@ class MainWindow(QMainWindow):
         self.btn_info.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_MessageBoxInformation))
         self.btn_info.setToolTip('About this window')
         self.btn_info.setAutoRaise(True)
-        self.btn_info.clicked.connect(self.open_about)
         top_row.addWidget(self.btn_info, 0, Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignRight)
 
         main.addLayout(top_row)
@@ -185,6 +184,7 @@ class MainWindow(QMainWindow):
         self.btn_add_man.clicked.connect(self.add_manager)
         self.btn_mod_man.clicked.connect(self.modify_manager)
         self.btn_open_sld.clicked.connect(self.open_sld)
+        self.btn_info.clicked.connect(self.open_about)
 
     # ---------------- Behaviors (mirror original) ----------------
     
