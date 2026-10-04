@@ -11,6 +11,13 @@ from .view import SLDView
 
 
 class SLDController:
+    """Connects the SLD view to the model.
+
+    Works with NodeIDs internally; the user only ever sees and types names.
+    After every change the tree is reloaded from the database, so the view
+    never shows stale names or parents.
+    """
+
     def __init__(self, model: SLDModel, view: SLDView) -> None:
         self.model = model
         self.view = view
@@ -22,32 +29,34 @@ class SLDController:
         self.model.ensure_schema()
         self.reload_tree()
 
-    def reload_tree(self, select_entry: Optional[str] = None) -> None:
+    # ---------------- Tree ----------------
+
+    def reload_tree(self, select_node_id: Optional[int] = None) -> None:
         relationships = self.model.fetch_relationships()
         self.view.clear_tree()
-        parent_map: Dict[str, List[RelationshipRow]] = {}
+        by_id = {rel.node_id: rel for rel in relationships}
+        children: Dict[int, List[RelationshipRow]] = {}
         root_rows: List[RelationshipRow] = []
-        names = {rel.entry_name for rel in relationships}
         for rel in relationships:
-            parent_name = (rel.attached_to or "").strip()
-            if not parent_name or parent_name == rel.entry_name or parent_name not in names:
+            parent_id = rel.parent_id
+            if parent_id is None or parent_id == rel.node_id or parent_id not in by_id:
                 root_rows.append(rel)
             else:
-                parent_map.setdefault(parent_name, []).append(rel)
+                children.setdefault(parent_id, []).append(rel)
 
-        def add_subtree(parent_item: Optional[QTreeWidgetItem], rel: RelationshipRow, visited: Optional[Set[str]] = None) -> None:
-            visited = visited or set()
-            if rel.entry_name in visited:
+        def add_subtree(parent_item: Optional[QTreeWidgetItem], rel: RelationshipRow, visited: Set[int]) -> None:
+            if rel.node_id in visited:
                 return
-            visited.add(rel.entry_name)
+            visited = visited | {rel.node_id}
             item = self.view.add_tree_item(parent_item, rel)
-            for child in sorted(parent_map.get(rel.entry_name, []), key=lambda x: x.entry_name.lower()):
-                add_subtree(item, child, set(visited))
+            for child in sorted(children.get(rel.node_id, []), key=lambda x: x.entry_name.lower()):
+                add_subtree(item, child, visited)
 
         for root in sorted(root_rows, key=lambda x: x.entry_name.lower()):
-            add_subtree(None, root)
+            add_subtree(None, root, set())
         self.view.expand_all()
-        if select_entry and self.view.select_entry(select_entry):
+
+        if select_node_id is not None and self.view.select_node(select_node_id):
             return
         top = self.view.tree.topLevelItem(0)
         if top is not None:
@@ -55,21 +64,52 @@ class SLDController:
         else:
             self.view.set_detail_data(None)
 
+    # ---------------- Parent checks ----------------
+
+    def _resolve_parent(self, parent_name: str) -> Optional[int]:
+        """Turn the parent name the user typed into a NodeID (blank means no parent)."""
+        parent_name = (parent_name or "").strip()
+        if not parent_name:
+            return None
+        parent_id = self.model.get_node_id(parent_name)
+        if parent_id is None:
+            raise ValueError(f"Parent '{parent_name}' does not exist.")
+        return parent_id
+
+    def _validate_parent(self, node_id: Optional[int], parent_id: Optional[int]) -> None:
+        """Reject attaching a node to itself or to one of its own descendants."""
+        if parent_id is None or node_id is None:
+            return
+        if parent_id == node_id:
+            raise ValueError("A node cannot be attached to itself.")
+        seen = {node_id}
+        current: Optional[int] = parent_id
+        while current is not None:
+            if current in seen:
+                raise ValueError("This parent assignment would create a cycle.")
+            seen.add(current)
+            rel = self.model.get_relationship(current)
+            if rel is None:
+                break
+            current = rel.parent_id
+
+    # ---------------- View events ----------------
+
     def on_tree_selection_changed(self) -> None:
-        entry_name = self.view.selected_entry_name()
-        if not entry_name:
+        node_id = self.view.selected_node_id()
+        if node_id is None:
             self.view.set_detail_data(None)
             return
-        rel = self.model.get_relationship(entry_name)
-        self.view.set_detail_data(rel)
+        self.view.set_detail_data(self.model.get_relationship(node_id))
 
     def on_detail_value_changed(self, field_name: str, new_value: str) -> None:
-        current_name = self.view.current_entry_name
-        if not current_name:
+        node_id = self.view.current_node_id
+        if node_id is None:
             return
-        rel = self.model.get_relationship(current_name)
-        if rel is None:
-            self.view.show_error("Missing node", f"Node '{current_name}' no longer exists in the database.")
+        if self.model.get_relationship(node_id) is None:
+            self.view.show_error(
+                "Missing node", f"Node '{self.view.current_entry_name}' no longer exists in the database."
+            )
             self.reload_tree()
             return
         try:
@@ -77,118 +117,83 @@ class SLDController:
                 new_name = new_value.strip()
                 if not new_name:
                     raise ValueError("Entry Name cannot be empty.")
-                self.model.rename_relationship(rel.entry_name, new_name)
-                self.reload_tree(select_entry=new_name)
+                self.model.rename_relationship(node_id, new_name)
+            elif field_name == self.view.FIELD_ATTACHED_TO:
+                parent_id = self._resolve_parent(new_value)
+                self._validate_parent(node_id, parent_id)
+                self.model.update_relationship_field(node_id, "ParentID", parent_id)
+            elif field_name == self.view.FIELD_TYPE:
+                self.model.update_relationship_field(node_id, "Type", new_value.strip() or None)
+            else:
                 return
-            if field_name == self.view.FIELD_ATTACHED_TO:
-                self._validate_parent_reference(rel.entry_name, new_value.strip())
-                self.model.update_relationship_field(rel.entry_name, "Attached_to", new_value.strip())
-                self.reload_tree(select_entry=rel.entry_name)
-                return
-            if field_name == self.view.FIELD_TYPE:
-                self.model.update_relationship_field(rel.entry_name, "Type", new_value.strip() or None)
-                self.reload_tree(select_entry=rel.entry_name)
-                return
+            self.reload_tree(select_node_id=node_id)
         except Exception as exc:
             self.view.show_error("Update failed", str(exc))
-            refreshed = self.model.get_relationship(current_name)
-            self.view.set_detail_data(refreshed)
-
-    def _validate_parent_reference(self, entry_name: str, parent_name: str) -> None:
-        if not parent_name:
-            return
-        if parent_name == entry_name:
-            raise ValueError("A node cannot be attached to itself.")
-        if not self.model.exists(parent_name):
-            raise ValueError(f"Parent '{parent_name}' does not exist.")
-        seen = {entry_name}
-        current = parent_name
-        while current:
-            if current in seen:
-                raise ValueError("This parent assignment would create a cycle.")
-            seen.add(current)
-            rel = self.model.get_relationship(current)
-            if not rel:
-                break
-            current = (rel.attached_to or "").strip()
+            self.view.set_detail_data(self.model.get_relationship(node_id))
 
     def add_node(self) -> None:
         seed_parent = self.view.selected_entry_name() or ""
         data = RelationshipRow(entry_name="", attached_to=seed_parent, entry_type=None)
         payload = self.view.open_node_dialog(title="Add node", data=data)
-        
         if payload is None:
             return
-        
-        base_name = payload["entry_name"]
-        attached_to = payload["attached_to"]
-        entry_type = payload["entry_type"]
-        is_multiple = payload["is_multiple"]
-        multiple_count = payload["multiple_count"]
-        
-        if not base_name:
-            raise ValueError("Entry Name cannot be empty.")
-        if self.model.exists(base_name):
-            raise ValueError(f"An entry named '{base_name}' already exists.")
-        
-        self._validate_parent_reference(base_name, attached_to)
-        
         try:
-            
-            if is_multiple:
+            base_name = payload["entry_name"]
+            if not base_name:
+                raise ValueError("Entry Name cannot be empty.")
+            parent_id = self._resolve_parent(payload["attached_to"])
+            entry_type = payload["entry_type"]
+
+            if payload["is_multiple"]:
                 rows = [
-                    RelationshipRow(
-                        entry_name=f"{base_name}_{i}",
-                        attached_to=attached_to,
-                        entry_type=entry_type,
-                    )
-                    for i in range(1, multiple_count + 1)
+                    RelationshipRow(f"{base_name}_{i}", "", entry_type, parent_id=parent_id)
+                    for i in range(1, payload["multiple_count"] + 1)
                 ]
-                self.model.add_multiple_relationships(rows)
-                self.reload_tree()
+                new_ids = self.model.add_multiple_relationships(rows)
+                self.reload_tree(select_node_id=new_ids[0] if new_ids else None)
             else:
-                row = RelationshipRow(
-                    entry_name=base_name, 
-                    attached_to=attached_to,
-                    entry_type=entry_type,
+                new_id = self.model.add_relationship(
+                    RelationshipRow(base_name, "", entry_type, parent_id=parent_id)
                 )
-                self.model.add_relationship(row)
-                self.reload_tree(select_entry=base_name)
-                
+                self.reload_tree(select_node_id=new_id)
         except Exception as exc:
             self.view.show_error("Add failed", str(exc))
 
     def edit_node(self) -> None:
-        entry_name = self.view.selected_entry_name()
-        if not entry_name:
+        node_id = self.view.selected_node_id()
+        if node_id is None:
             self.view.show_warning("No selection", "Select a node first.")
             return
-        current = self.model.get_relationship(entry_name)
+        current = self.model.get_relationship(node_id)
         if current is None:
-            self.view.show_error("Missing node", f"Node '{entry_name}' no longer exists in the database.")
+            self.view.show_error("Missing node", "The selected node no longer exists in the database.")
             self.reload_tree()
             return
-        updated = self.view.open_node_dialog(title="Edit node", data=current)
-        if updated is None:
+        payload = self.view.open_node_dialog(title="Edit node", data=current)
+        if payload is None:
             return
         try:
-            if not updated.entry_name:
+            new_name = payload["entry_name"]
+            if not new_name:
                 raise ValueError("Entry Name cannot be empty.")
-            self._validate_parent_reference(updated.entry_name, updated.attached_to)
-            self.model.update_relationship(current.entry_name, updated)
-            self.reload_tree(select_entry=updated.entry_name)
+            parent_id = self._resolve_parent(payload["attached_to"])
+            self._validate_parent(node_id, parent_id)
+            self.model.update_relationship(
+                RelationshipRow(new_name, "", payload["entry_type"], node_id=node_id, parent_id=parent_id)
+            )
+            self.reload_tree(select_node_id=node_id)
         except Exception as exc:
             self.view.show_error("Edit failed", str(exc))
 
     def delete_node(self) -> None:
-        entry_name = self.view.selected_entry_name()
-        if not entry_name:
+        node_id = self.view.selected_node_id()
+        if node_id is None:
             self.view.show_warning("No selection", "Select a node first.")
             return
-        if not self.view.ask_delete_confirmation(entry_name):
+        if not self.view.ask_delete_confirmation(self.view.selected_entry_name()):
             return
         try:
-            self.model.delete_relationship(entry_name)
+            self.model.delete_relationship(node_id)
             self.reload_tree()
         except Exception as exc:
             self.view.show_error("Delete failed", str(exc))
