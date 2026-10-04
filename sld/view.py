@@ -1,4 +1,3 @@
-
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
@@ -15,6 +14,7 @@ from PySide6.QtWidgets import (
     QTableView,
     QTreeWidget,
     QTreeWidgetItem,
+    QTreeWidgetItemIterator,
     QVBoxLayout,
     QWidget,
 )
@@ -23,15 +23,19 @@ from PySide6.QtGui import QAction
 
 from .detail_table_model import DetailTableModel
 from .dialogs import NodeDialog
-from .model import RelationshipRow
+from .model import ROOT_TYPE, RelationshipRow
 from .delegates import TypeComboDelegate
 
 
 class SLDView(QWidget):
-    """UI only: no DB logic here."""
+    """UI only: no DB logic here.
+
+    Each tree item keeps its node's NodeID as hidden data (Qt.UserRole) and
+    whether it is the project root (Qt.UserRole + 1). Neither is displayed.
+    """
 
     add_requested = Signal()
-    edit_requested =Signal()
+    edit_requested = Signal()
     delete_requested = Signal()
     selection_changed = Signal()
     detail_value_changed = Signal(str, str)
@@ -43,6 +47,8 @@ class SLDView(QWidget):
     def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
 
+        # Node shown in the details table: NodeID for identity, name for messages.
+        self.current_node_id: Optional[int] = None
         self.current_entry_name: Optional[str] = None
 
         self.tree = QTreeWidget()
@@ -55,7 +61,7 @@ class SLDView(QWidget):
         self.detail_model = DetailTableModel(self)
         self.table.setModel(self.detail_model)
         self.table.setItemDelegate(TypeComboDelegate(self.table))
-        
+
         self.detail_model.value_changed.connect(self.detail_value_changed.emit)
         self.table.setSelectionBehavior(QAbstractItemView.SelectItems)
         self.table.setSelectionMode(QAbstractItemView.SingleSelection)
@@ -88,9 +94,10 @@ class SLDView(QWidget):
     def _show_tree_context_menu(self, pos) -> None:
         menu = QMenu(self)
         menu.addAction(self.action_add)
-        if self.selected_entry_name() is not None:
+        if self.selected_node_id() is not None:
             menu.addAction(self.action_edit)
-            menu.addAction(self.action_delete)
+            if not self.selected_is_root():
+                menu.addAction(self.action_delete)
         menu.exec_(self.tree.viewport().mapToGlobal(pos))
 
     def clear_tree(self) -> None:
@@ -98,9 +105,8 @@ class SLDView(QWidget):
 
     def add_tree_item(self, parent_item: Optional[QTreeWidgetItem], rel: RelationshipRow) -> QTreeWidgetItem:
         item = QTreeWidgetItem([rel.entry_name])
-        item.setData(0, Qt.UserRole, rel.entry_name)
-        item.setData(0, Qt.UserRole + 1, rel.attached_to)
-        item.setData(0, Qt.UserRole + 2, rel.entry_type or "")
+        item.setData(0, Qt.UserRole, rel.node_id)
+        item.setData(0, Qt.UserRole + 1, rel.entry_type == ROOT_TYPE)
         if parent_item is None:
             self.tree.addTopLevelItem(item)
         else:
@@ -110,24 +116,38 @@ class SLDView(QWidget):
     def expand_all(self) -> None:
         self.tree.expandAll()
 
-    def selected_entry_name(self) -> Optional[str]: 
+    def selected_node_id(self) -> Optional[int]:
         item = self.current_tree_item()
         if item is None:
             return None
         return item.data(0, Qt.UserRole)
 
+    def selected_is_root(self) -> bool:
+        item = self.current_tree_item()
+        return bool(item is not None and item.data(0, Qt.UserRole + 1))
+
+    def selected_entry_name(self) -> Optional[str]:
+        item = self.current_tree_item()
+        if item is None:
+            return None
+        return item.text(0)
+
     def current_tree_item(self) -> Optional[QTreeWidgetItem]:
         items = self.tree.selectedItems()
         return items[0] if items else None
 
-    def select_entry(self, entry_name: str) -> bool:
-        matches = self.tree.findItems(entry_name, Qt.MatchRecursive | Qt.MatchExactly, 0)
-        if not matches:
-            return False
-        self.tree.setCurrentItem(matches[0])
-        return True
+    def select_node(self, node_id: int) -> bool:
+        iterator = QTreeWidgetItemIterator(self.tree)
+        while iterator.value() is not None:
+            item = iterator.value()
+            if item.data(0, Qt.UserRole) == node_id:
+                self.tree.setCurrentItem(item)
+                return True
+            iterator += 1
+        return False
 
     def set_detail_data(self, rel: Optional[RelationshipRow]) -> None:
+        self.current_node_id = rel.node_id if rel is not None else None
         self.current_entry_name = rel.entry_name if rel is not None else None
         self.detail_model.set_relationship(rel)
 
