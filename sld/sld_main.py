@@ -49,7 +49,14 @@ class SLDMainWindow(QMainWindow):
             self.model = SLDModel(self.db_path, self.project, sync_root_name=True)
 
             self.view = SLDView(self)
-            self.controller = SLDController(self.model, self.view)
+            try:
+                self.controller = SLDController(self.model, self.view)
+            except Exception:
+                # Opening the database failed: don't leave a hidden, half-built
+                # window attached to the DB Client.
+                self.setParent(None)
+                self.deleteLater()
+                raise
             self.setCentralWidget(self.view)
 
             self.Menubar = SLDMenuBar()
@@ -77,7 +84,8 @@ class SLDMainWindow(QMainWindow):
         return note + ")"
 
     def closeEvent(self, event):
-        close = getattr(self.model, "close", None)
+        # A window created without a parent has no model.
+        close = getattr(getattr(self, "model", None), "close", None)
         if callable(close):
             close()
         if self.parent_window is not None:

@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/Treeview-arranger.iml" filepath="$PROJECT_DIR$/.idea/Treeview-arranger.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/SLDB.iml" filepath="$PROJECT_DIR$/.idea/SLDB.iml" />
     </modules>
   </component>
 </project>

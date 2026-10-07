@@ -47,7 +47,7 @@ from config.paths import CLIENT_DB
 
 # Optional dependency from your existing project
 try:
-    from create_schedule import get_schedule
+    from .create_schedule import get_schedule
 except Exception:
     get_schedule = None
 
@@ -467,8 +467,12 @@ class MainWindow(QMainWindow):
             existing.raise_()
             existing.activateWindow()
             return
-     
-        window = SLDMainWindow(project=project_name, parent=self)
+
+        try:
+            window = SLDMainWindow(project=project_name, parent=self)
+        except Exception as exc:
+            QMessageBox.critical(self, 'SLD Browser', f'Could not open the SLD for {project_name}:\n{exc}')
+            return
         window.destroyed.connect(lambda *_args, 
                                  name=project_name: self._sld_windows.pop(name, None))
         
