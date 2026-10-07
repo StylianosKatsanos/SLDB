@@ -14,5 +14,6 @@ DATABASE_ROOT.mkdir(exist_ok=True)
 
 CLIENT_DB = DATABASE_ROOT / "Projects_2025.db"
 
-SLD_DB_ROOT = DATABASE_ROOT / "SLD_Databases"
+# Must match the folder name in the repository exactly (Linux and macOS are case-sensitive).
+SLD_DB_ROOT = DATABASE_ROOT / "sld_databases"
 SLD_DB_ROOT.mkdir(exist_ok=True)

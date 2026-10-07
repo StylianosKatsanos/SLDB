@@ -35,7 +35,7 @@ class TypeComboDelegate(QStyledItemDelegate):
             if i >= 0:
                 editor.setCurrentIndex(i)
             else:
-                editor.setCurrentIndex(editor, index) # show no selection if current value not in TYPES
+                editor.setCurrentIndex(-1) # show no selection if current value not in TYPES
         else:
             super().setEditorData(editor, index)
 
@@ -43,7 +43,7 @@ class TypeComboDelegate(QStyledItemDelegate):
         if isinstance(editor, QComboBox):
             value = editor.currentText()
 
-            if value.startswith("---"):
+            if not value or value.startswith("---"):
                 return
 
             model.setData(index, value, Qt.EditRole)
