@@ -83,12 +83,13 @@ class MainWindow(QMainWindow):
         self.message = QLabel('')
         self.message.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.message.setMaximumHeight(50)
-        self.message.setStyleSheet('color: red;')
+        self.message.setStyleSheet('color: red;background-color: #add8e6;')
         self.message.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
 
-        # Info Button
         top_row = QHBoxLayout()
         top_row.addWidget(self.message, 1)
+
+        # Info Button
         self.btn_info = QToolButton()
         self.btn_info.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_MessageBoxInformation))
         self.btn_info.setToolTip('About this window')
@@ -369,7 +370,8 @@ class MainWindow(QMainWindow):
             plan_col = dlg.cmb_plan_col.currentText()
             act_col = dlg.cmb_act_col.currentText()
             param = plan_col if plan_col != '' else act_col
-            if param == '':
+            if param == '' or param is None:
+                self.message.setText(f'Cannot add a Revision of N/A to an empty entry')
                 return
 
             if dlg.chk_revision.isChecked():

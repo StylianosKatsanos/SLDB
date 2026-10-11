@@ -82,7 +82,7 @@ def get_sql(database=''):
     planned_query = '''SELECT * FROM Projects;'''
     with sqlite3.connect(database) as conn:
         pland = pd.read_sql(planned_query, conn)
-    headers = list(pland.columns.values)
+    headers = pland.columns.values.to_list() #list(pland.columns.values)
     pland.drop(columns=headers[1:5], axis=1, inplace=True)
     pland.set_index("Project_Name", inplace=True)
     return  pland
