@@ -65,6 +65,7 @@ class SLDMainWindow(QMainWindow):
             self.Menubar.newSLD_action.triggered.connect(self.new_SLD_clicked)
             self.Menubar.openSLD_action.triggered.connect(self.open_SLD_clicked)
             self.Menubar.exportSLD_action.triggered.connect(self.export_SLD_clicked)
+            self.Menubar.importSLD_action.triggered.connect(self.import_SLD_clicked)
             self.Menubar.exitSLD_action.triggered.connect(self.confirm_exit)
             self.Menubar.about_action.triggered.connect(self.about_project)
 
@@ -142,7 +143,7 @@ class SLDMainWindow(QMainWindow):
             self,
             "Export CSV",
             "raw_database.csv",
-            "CSV files (.csv)"
+            "CSV files (*.csv)"
         )
 
         if not file_path:
@@ -150,6 +151,20 @@ class SLDMainWindow(QMainWindow):
         else:
             self.model.export_database(file_path)
             print(f"Selected Folder: {file_path}")
+
+    def import_SLD_clicked(self):
+        file_path, _ = QFileDialog.getOpenFileName(
+            self,
+            "Import SLD",
+            str(SLD_DB_ROOT),
+            "CSV files (*.csv)"
+        )
+
+        if not file_path:
+            return # user cancelled
+        else:
+            self.statusBar().showMessage(f"File {file_path} selected")
+            return
 
     def confirm_exit(self):
         """Ask the user for confirmation before exiting."""

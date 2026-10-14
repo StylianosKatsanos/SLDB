@@ -46,7 +46,12 @@ class SLDMenuBar(QMenuBar):
         self.exportSLD_action = QAction("Export", self)
         self.exportSLD_action.setStatusTip("Export an existing SLD File")
         self.exportSLD_action.setShortcut("Ctrl+E")  # Keyboard shortcut
-        
+
+        # --------------- Import SLD from external file --------------------------#
+        self.importSLD_action = QAction("Import", self)
+        self.importSLD_action.setStatusTip("Import SLD from external file")
+        self.importSLD_action.setShortcut("Ctrl+I")  # Keyboard shortcut
+
         # --------------- Exit Viewer --------------------------------#
         
         self.exitSLD_action = QAction("Exit", self)
@@ -61,6 +66,7 @@ class SLDMenuBar(QMenuBar):
         file_menu.addAction(self.newSLD_action)
         file_menu.addAction(self.openSLD_action)
         file_menu.addAction(self.exportSLD_action)
+        file_menu.addAction(self.importSLD_action)
         file_menu.addAction(self.exitSLD_action)
         help_menu.addAction(self.about_action)
     
