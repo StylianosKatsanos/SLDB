@@ -121,8 +121,8 @@ class ModifyProjectDialog(QDialog):
         self.chk_na = QCheckBox('Add N/A')
 
         excluded = {'Status', 'Design_Manager', 'Project_Code', 'Server_Path'}
-        planned_cols = [''] + [x for x in headers[1::2] if x not in excluded]
-        actual_cols = [''] + [x for x in headers[2::2] if x not in excluded]
+        actual_cols = [''] + [x for x in headers[1::2] if x not in excluded]
+        planned_cols = [''] + [x for x in headers[2::2] if x not in excluded]
 
         self.cmb_plan_col = QComboBox(); self.cmb_plan_col.addItems(planned_cols)
         self.cmb_act_col = QComboBox(); self.cmb_act_col.addItems(actual_cols)

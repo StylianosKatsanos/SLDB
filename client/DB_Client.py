@@ -39,7 +39,7 @@ from PySide6.QtWidgets import (
 from .treeview_edit_qt import ProjectTableView
 from .filter_window_qt import FilterWindowDialog, FilterSpec
 from .repositories.repo import SQLiteRepo
-from .dialogs.dialogs import (
+from .dialogs.client_dialogs import (
     AddProjectDialog, AddManagerDialog,
     ModifyManagerDialog, ModifyProjectDialog, AboutClientDialog
 )
@@ -83,12 +83,13 @@ class MainWindow(QMainWindow):
         self.message = QLabel('')
         self.message.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.message.setMaximumHeight(50)
-        self.message.setStyleSheet('color: red;')
+        self.message.setStyleSheet('color: red;background-color: #add8e6;')
         self.message.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
 
-        # Info Button
         top_row = QHBoxLayout()
         top_row.addWidget(self.message, 1)
+
+        # Info Button
         self.btn_info = QToolButton()
         self.btn_info.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_MessageBoxInformation))
         self.btn_info.setToolTip('About this window')
