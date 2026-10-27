@@ -100,6 +100,8 @@ def _validate_rows(rows: List[ImportRow]) -> ImportReport:
     project_rows = [row for row in rows if row.entry_type == "PROJECT"]
     if len(project_rows) > 1:
         report.errors.append(f'Multiple project roots in file')
+    if len(project_rows) == 0:
+        report.errors.append('No project roots in file')
     project_with_parent = [row.line for row in rows if row.parent_name and row.entry_type == "PROJECT"]
     if len(project_with_parent) != 0:
         for line in project_with_parent:
@@ -121,7 +123,7 @@ def _validate_rows(rows: List[ImportRow]) -> ImportReport:
     # Step 7 Only Root File
 
     if not any(row.entry_type != "PROJECT" for row in rows):
-        report.warnings.append(f'No rows beside root found in file; importing would mean an empty SLD')
+        report.warnings.append('No rows beside root found in file; importing would mean an empty SLD')
 
     return report
 
