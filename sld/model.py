@@ -10,8 +10,8 @@ from dataclasses import dataclass
 from typing import Iterator, List, Optional
 
 # LegacySchemaError is re-exported for callers that import it from sld.model.
-from .schema import CREATE_RELATIONSHIPS, LegacySchemaError, MigrationResult, is_legacy, migrate_legacy  # noqa: F401
-
+from .schema import CREATE_RELATIONSHIPS, LegacySchemaError, MigrationResult, is_legacy, migrate_legacy, backup_databse  # noqa: F401
+from sld.sld_import import ImportReport
 
 # Type of the single project root node.
 ROOT_TYPE = "PROJECT"
@@ -337,3 +337,46 @@ class SLDModel:
     def close(self) -> None:
         # Every method opens and closes its own connection, so nothing stays open.
         pass
+
+    # ---------------- Import ----------------
+
+    def replace_with_import(self, csv_report: ImportReport) -> int:
+
+        if csv_report.ok:
+            rows, root_name = csv_report.rows, csv_report.root_name
+        else:
+            raise ValueError("The import had errors")
+
+        # Making a backup of the database before importing CSV
+        backup_database(self.db_path, "pre-import")
+
+        with self._transaction() as conn:
+
+            root = self._root_id(conn)
+            new_ids = {}
+
+            conn.execute("DELETE FROM Relationships WHERE NodeID != ?", (root,))
+
+            for rel in rows:
+                if rel.entry_type != "PROJECT":
+                    self._check_name_free(conn, rel.name)
+                    self._check_root_rules(conn, None, entry_type=rel.entry_type, changes=("type",))
+                    cur = conn.execute(
+                        "INSERT INTO Relationships (Entry_name, ParentID, Type) VALUES (?, ?, ?)",
+                        (rel.name, None, rel.entry_type),
+                    )
+                    new_ids[rel.name] = cur.lastrowid
+
+            for rel in rows:
+                if rel.entry_type == "PROJECT":
+                    continue
+                if rel.parent_name is None or rel.parent_name == root_name:
+                    parent_id = root
+                else:
+                    parent_id = new_ids[rel.parent_name]
+                conn.execute(
+                    "UPDATE Relationships SET ParentID = ? WHERE NodeID = ?",
+                    (parent_id, new_ids[rel.name]),
+                )
+
+        return len(new_ids)

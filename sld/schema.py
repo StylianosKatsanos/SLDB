@@ -47,18 +47,18 @@ def is_legacy(conn: sqlite3.Connection) -> bool:
     return bool(columns) and "NodeID" not in columns
 
 
-def _backup_path_for(db_path: pathlib.Path) -> pathlib.Path:
+def _backup_path_for(db_path: pathlib.Path, suffix: str = 'pre-nodeid') -> pathlib.Path:
     # ".bak" keeps the backup out of the "*.db" filter in the Open SLD dialog.
-    path = db_path.with_name(f"{db_path.name}.pre-nodeid.bak")
+    path = db_path.with_name(f"{db_path.name}.{suffix}.bak")
     if path.exists():
         stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-        path = db_path.with_name(f"{db_path.name}.pre-nodeid-{stamp}.bak")
+        path = db_path.with_name(f"{db_path.name}.{suffix}-{stamp}.bak")
     return path
 
 
-def _backup(db_path: pathlib.Path) -> pathlib.Path:
+def backup_database(db_path: pathlib.Path, suffix: str = None) -> pathlib.Path:
     """Copy the database with SQLite's backup API (includes unsaved WAL pages)."""
-    backup_path = _backup_path_for(db_path)
+    backup_path = _backup_path_for(db_path, suffix)
     src = sqlite3.connect(str(db_path))
     dst = sqlite3.connect(str(backup_path))
     try:
