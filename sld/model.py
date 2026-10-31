@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from typing import Iterator, List, Optional
 
 # LegacySchemaError is re-exported for callers that import it from sld.model.
-from .schema import CREATE_RELATIONSHIPS, LegacySchemaError, MigrationResult, is_legacy, migrate_legacy, backup_databse  # noqa: F401
+from .schema import CREATE_RELATIONSHIPS, LegacySchemaError, MigrationResult, is_legacy, migrate_legacy, backup_database  # noqa: F401
 from sld.sld_import import ImportReport
 
 # Type of the single project root node.

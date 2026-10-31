@@ -5,8 +5,7 @@ import pathlib
 import re
 import sys
 
-from PySide6.QtWidgets import QApplication, QMainWindow, QToolBar, QInputDialog, QMessageBox, QFileDialog
-from PySide6.QtGui import QAction
+from PySide6.QtWidgets import QApplication, QMainWindow, QInputDialog, QMessageBox, QFileDialog
 
 from .controller import SLDController
 from .model import SLDModel
@@ -14,7 +13,6 @@ from .view import SLDView
 from .Menu_Bar import SLDMenuBar
 from .dialogs import AboutSLDDialog
 
-from config.paths import CLIENT_DB
 from config.paths import SLD_DB_ROOT
 
 
@@ -149,8 +147,12 @@ class SLDMainWindow(QMainWindow):
         if not file_path:
             return  # user cancelled
         else:
-            self.model.export_database(file_path)
-            print(f"Selected Folder: {file_path}")
+            try:
+                self.model.export_database(file_path)
+            except Exception as e:
+                self.statusBar().showMessage(f"Cannot Export data: {str(e)}")
+            self.statusBar().showMessage(f"Exported to: {file_path}")
+            return
 
     def import_SLD_clicked(self):
         file_path, _ = QFileDialog.getOpenFileName(
@@ -163,7 +165,9 @@ class SLDMainWindow(QMainWindow):
         if not file_path:
             return # user cancelled
         else:
-            self.statusBar().showMessage(f"File {file_path} selected")
+            count = self.controller.import_csv(file_path)
+            if count is not None:
+                self.statusBar().showMessage(f"Imported {count} nodes from {file_path}")
             return
 
     def confirm_exit(self):

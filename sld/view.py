@@ -25,6 +25,7 @@ from .detail_table_model import DetailTableModel
 from .dialogs import NodeDialog
 from .model import ROOT_TYPE, RelationshipRow
 from .delegates import TypeComboDelegate
+from .sld_import import ImportReport
 
 
 class SLDView(QWidget):
@@ -163,6 +164,19 @@ class SLDView(QWidget):
         msg.setIcon(QMessageBox.Warning)
         msg.setText(f"Delete '{entry_name}'?")
         msg.setInformativeText("Children will be reattached to the deleted node's parent.")
+        msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+        msg.setDefaultButton(QMessageBox.No)
+        return msg.exec_() == QMessageBox.Yes
+
+    def ask_import_confirmation(self, report: ImportReport) -> bool:
+        n = sum(r.entry_type != ROOT_TYPE for r in report.rows)
+        msg = QMessageBox(self)
+        msg.setWindowTitle("Import SLD")
+        msg.setIcon(QMessageBox.Warning)
+        msg.setText(f"Replace the SLD with {n} nodes from this file?")
+        msg.setInformativeText("All existing nodes except the project node will be deleted. A backup is saved first.")
+        if report.warnings:
+            msg.setDetailedText("\n".join(report.warnings))
         msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
         msg.setDefaultButton(QMessageBox.No)
         return msg.exec_() == QMessageBox.Yes

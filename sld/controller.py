@@ -1,12 +1,14 @@
 
 # -*- coding: utf-8 -*-
 from __future__ import annotations
+import pathlib
 
 from typing import Dict, List, Optional, Set
 
 from PySide6.QtWidgets import QTreeWidgetItem
 
 from .model import RelationshipRow, SLDModel
+from .sld_import import load_sld_csv
 from .view import SLDView
 
 
@@ -197,3 +199,23 @@ class SLDController:
             self.reload_tree()
         except Exception as exc:
             self.view.show_error("Delete failed", str(exc))
+
+    # ---------------- Import ----------------
+
+    def import_csv(self, path: str) -> int|None:
+
+        report = load_sld_csv(pathlib.Path(path))
+        if not report.ok:
+            self.view.show_error("Import failed", "The file has errors:\n" + "\n".join(report.errors))
+            return None
+
+        if not self.view.ask_import_confirmation(report):
+            return None
+
+        try:
+            count = self.model.replace_with_import(report)
+        except Exception as exc:
+            self.view.show_error("Import failed", str(exc))
+            return None
+        self.reload_tree()
+        return count
